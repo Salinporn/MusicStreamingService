@@ -1,0 +1,24 @@
+<RCC>
+  <qresource prefix="resources">
+    <file>assets/images/cancel.png</file>
+    <file>assets/images/play_ver2.png</file>
+    <file>assets/images/go_back.png</file>
+    <file>assets/images/enter.png</file>
+    <file>assets/images/add.png</file>
+    <file>assets/images/browse1.png</file>
+    <file>assets/images/browseNotActive.png</file>
+    <file>assets/images/home.png</file>
+    <file>assets/images/homeNotActive.png</file>
+    <file>assets/images/library.png</file>
+    <file>assets/images/libraryNotActive.png</file>
+    <file>assets/images/next.png</file>
+    <file>assets/images/pause.png</file>
+    <file>assets/images/person1.png</file>
+    <file>assets/images/person1NotActive.png</file>
+    <file>assets/images/play.png</file>
+    <file>assets/images/previous.png</file>
+    <file>assets/images/search.png</file>
+    <file>assets/images/settings.png</file>
+    <file>assets/images/settingsNotActive.png</file>
+  </qresource>
+</RCC>
