@@ -1,0 +1,69 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Manage Music{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.0.0/datatables.min.css" rel="stylesheet">
+{% endblock %}
+
+{% macro table(data, attributes, headings) %}
+<div class="table-responsive w-100">
+    <table class="table table-hover overflow-auto text-nowrap m-0 w-100" id="musicTable">
+        <thead>
+            <tr class="table-dark">
+                <th scope="col">#</th>
+                {% for heading in headings %}
+                <th scope="col">{{ heading }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+                <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_users_edit', user_id=u.uuid) }}'">
+                    <td>{{ loop.index }}</td>
+                    {% for attr in attributes %}
+                    <td>{{ row.__dict__[attr] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="button-area">
+    <a class="btn btn-success" href="/dashboard/users/add">Add User</a>
+</div>
+{% endmacro %}
+
+{% block content %}
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="songs-tab" data-bs-toggle="tab" data-bs-target="#songs" type="button" role="tab" aria-controls="songs" aria-selected="true">Songs</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="artists-tab" data-bs-toggle="tab" data-bs-target="#artists" type="button" role="tab" aria-controls="artists" aria-selected="false">Artists</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="albums-tab" data-bs-toggle="tab" data-bs-target="#albums" type="button" role="tab" aria-controls="albums" aria-selected="false">Albums</button>
+  </li>
+</ul>
+
+
+<!-- tab panes -->
+<div class="d-flex flex-column" style="gap: 10px;">
+    <div class="tab-content">
+    <div class="tab-pane active" id="songs" role="tabpanel" aria-labelledby="songs-tab">
+        {{ table(songs, ["title", "genre", "artist", "album"], ["Title", "Genre", "Artist", "Album"]) }}
+    </div>
+    <div class="tab-pane" id="artists" role="tabpanel" aria-labelledby="artists-tab">test2</div>
+    <div class="tab-pane" id="albums" role="tabpanel" aria-labelledby="albums-tab">test3</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.0.0/datatables.min.js"></script>
+<script>
+let table = new DataTable("#musicTable", {
+    scrollX: true
+});
+</script>
+{% endblock %}

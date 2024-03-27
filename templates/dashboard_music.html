@@ -1,0 +1,142 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Manage Music{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.0.0/datatables.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="songs-tab" data-bs-toggle="tab" data-bs-target="#songs" type="button" role="tab" aria-controls="songs" aria-selected="true">Songs</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="artists-tab" data-bs-toggle="tab" data-bs-target="#artists" type="button" role="tab" aria-controls="artists" aria-selected="false">Artists</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="albums-tab" data-bs-toggle="tab" data-bs-target="#albums" type="button" role="tab" aria-controls="albums" aria-selected="false">Albums</button>
+  </li>
+</ul>
+
+
+<!-- tab panes -->
+<div class="d-flex flex-column" style="gap: 10px;">
+    <div class="tab-content">
+        <div class="tab-pane active" id="songs" role="tabpanel" aria-labelledby="songs-tab">
+            <div class="w-100">
+                <table class="table table-hover overflow-auto text-nowrap m-0 w-100" id="songsTable">
+                    <thead>
+                        <tr class="table-dark">
+                            <th scope="col">#</th>
+                            <th scope="col">Title</th>
+                            <th scope="col">Genre</th>
+                            <th scope="col">Artist</th>
+                            <th scope="col">Album</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in songs %}
+                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_users_edit', user_id=u.uuid) }}'">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ s.title }}</td>
+                                <td>{{ s.genre }}</td>
+                                <td>{{ s.artist }}</td>
+                                <td>{{ s.album }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="button-area">
+                <a class="btn btn-success" href="/dashboard/users/add">Add User</a>
+            </div>
+        </div>
+        <div class="tab-pane" id="artists" role="tabpanel" aria-labelledby="artists-tab">
+            <div class="w-100">
+                <table class="table table-hover overflow-auto text-nowrap m-0 w-100" id="artistsTable">
+                    <thead>
+                        <tr class="table-dark">
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">No. Albums</th>
+                            <th scope="col">No. Songs</th>
+                            <th scope="col">No. Followers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in artists %}
+                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_users_edit', user_id=u.uuid) }}'">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ a.name }}</td>
+                                <td>{{ a.description }}</td>
+                                <td>{{ len(a.albums) }}</td>
+                                <td>{{ len(a.songs) }}</td>
+                                <td>{{ len(a.followers) }}</td>
+                            </tr>
+                        {% endfor %}
+                        <tr style="cursor: pointer;">
+                            <td>1</td>
+                            <td>test1</td>
+                            <td>test2</td>
+                            <td>test3</td>
+                            <td>test4</td>
+                            <td>test5</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="button-area">
+                <a class="btn btn-success" href="/dashboard/users/add">Add User</a>
+            </div>
+        </div>
+        <div class="tab-pane" id="albums" role="tabpanel" aria-labelledby="albums-tab">
+            <div class="w-100">
+                <table class="table table-hover overflow-auto text-nowrap m-0 w-100" id="artistsTable">
+                    <thead>
+                        <tr class="table-dark">
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">No. Albums</th>
+                            <th scope="col">No. Songs</th>
+                            <th scope="col">No. Followers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in albums %}
+                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_users_edit', user_id=u.uuid) }}'">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ a.title }}</td>
+                                <td>{{ a.description }}</td>
+                                <td>{{ len(a.albums) }}</td>
+                                <td>{{ len(a.songs) }}</td>
+                                <td>{{ len(a.followers) }}</td>
+                            </tr>
+                        {% endfor %}
+                        <tr style="cursor: pointer;">
+                            <td>1</td>
+                            <td>test1</td>
+                            <td>test2</td>
+                            <td>test3</td>
+                            <td>test4</td>
+                            <td>test5</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="button-area">
+                <a class="btn btn-success" href="/dashboard/users/add">Add User</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.0.0/datatables.min.js"></script>
+<script>
+let table = new DataTable(".table", {});
+</script>
+{% endblock %}
