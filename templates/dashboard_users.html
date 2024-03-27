@@ -1,0 +1,46 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Manage Users{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.0.0/datatables.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column" style="gap: 10px;">
+    <div class="text-nowrap w-100">
+        <table class="table" id="usersTable">
+            <thead>
+                <tr class="table-dark">
+                    <th scope="col">#</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Password Hash</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                    <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_users_edit', user_id=u.uuid) }}'">
+                        <td>{{ loop.index }}</td>
+                        <td>{{ u.email }}</a></td>
+                        <td>{{ u.name }}</a></td>
+                        <td>{{ u.password_hash }}</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="button-area">
+        <a class="btn btn-success" href="/dashboard/users/add">Add User</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.0.0/datatables.min.js"></script>
+<script>
+let table = new DataTable("#usersTable", {
+    scrollX: true
+});
+</script>
+{% endblock %}
