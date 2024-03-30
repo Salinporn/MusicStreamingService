@@ -6,6 +6,7 @@ import transaction
 from models import User
 import uuid
 from werkzeug.security import generate_password_hash
+import datetime
 
 # middleman for communicating with the database
 class Manager:
@@ -23,6 +24,7 @@ class UserManager(Manager):
     def __init__(self, root):
         super().__init__(root)
         self.users = self.root["users"]
+        self.sessions = self.root["sessions"]
         
         # default admin user
         self.create_new_user(self.DEFAULT_ADMIN_EMAIL, self.DEFAULT_ADMIN_NAME, self.DEFAULT_ADMIN_PASSWORD)
@@ -79,8 +81,20 @@ class UserManager(Manager):
             
         return True
 
+    def add_session(self, session_id: str, user_uuid: str, expiry_time: datetime.timedelta) -> bool:
+        if user_uuid not in self.users:
+            return False
+        
+        self.sessions[session_id] = {
+            "session_id": session_id,
+            "user_uuid": user_uuid,
+            "expiry": datetime.datetime.now() + expiry_time
+        }
+        
+        return True
+
 class DBManager:
-    INITIAL = ["users"]
+    INITIAL = ["users", "sessions"]
     CONFIG_PATH = "./config.xml"
     
     def __init__(self):

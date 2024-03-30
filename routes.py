@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request, Body, Form, File, UploadFile, status
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import HTTPException
 from auth import current_user
@@ -104,3 +104,23 @@ def dashboard_music(request: Request, user=Depends(current_user)):
 @main.get("/dashboard/music/add", response_class=HTMLResponse)
 def dashboard_music_add(request: Request, user=Depends(current_user)):
     return templates.TemplateResponse("dashboard_song_form.html", {"request": request})
+
+# -- handle streaming --
+CHUNK_SIZE = 1024
+MEDIA_PATH = "static/media/"
+
+# DEMO
+@main.get("/stream-audio")
+async def stream_audio():
+    def iterate_audio():
+        try:
+            with open(MEDIA_PATH + "demo.mp3", "rb") as audio_file:
+                while True:
+                    chunk = audio_file.read(CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    yield chunk
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Audio file not found")
+
+    return StreamingResponse(iterate_audio(), media_type="audio/mpeg")
