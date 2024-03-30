@@ -10,7 +10,7 @@ from PySide6.QtMultimedia import (QMediaPlayer, QAudioOutput)
 from ui.main_ui import Ui_MainWindow
 import sys
 
-from backend.playlist import Playlist, Song, Category
+from backend.models import Playlist, Song, Category
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     SERVER_URL = "http://localhost/stream-audio"
