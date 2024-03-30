@@ -16,11 +16,13 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLabel,
-    QLineEdit, QMainWindow, QPushButton, QScrollArea,
-    QSizePolicy, QSlider, QSpacerItem, QSplitter,
-    QStackedWidget, QToolButton, QVBoxLayout, QWidget)
-import ui.resource_rc
+from PySide6.QtWidgets import (QApplication, QCheckBox, QGridLayout, QHBoxLayout,
+    QLabel, QLineEdit, QMainWindow, QPushButton,
+    QScrollArea, QSizePolicy, QSlider, QSpacerItem,
+    QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
+    QWidget)
+import resource_rc
+import resource_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -105,22 +107,30 @@ class Ui_MainWindow(object):
         self.actionExit.setObjectName(u"actionExit")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.horizontalLayout_2 = QHBoxLayout(self.centralwidget)
-        self.horizontalLayout_2.setSpacing(0)
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.sidebar = QWidget(self.centralwidget)
+        self.gridLayout_5 = QGridLayout(self.centralwidget)
+        self.gridLayout_5.setSpacing(0)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.stackedWidget = QStackedWidget(self.centralwidget)
+        self.stackedWidget.setObjectName(u"stackedWidget")
+        self.main_page = QWidget()
+        self.main_page.setObjectName(u"main_page")
+        self.horizontalLayout_7 = QHBoxLayout(self.main_page)
+        self.horizontalLayout_7.setSpacing(0)
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
+        self.horizontalLayout_7.setContentsMargins(0, 0, 0, 0)
+        self.sidebar = QWidget(self.main_page)
         self.sidebar.setObjectName(u"sidebar")
         self.sidebar.setMinimumSize(QSize(280, 0))
         self.sidebar.setMaximumSize(QSize(280, 16777215))
-        self.verticalLayout = QVBoxLayout(self.sidebar)
-        self.verticalLayout.setSpacing(0)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_23 = QVBoxLayout(self.sidebar)
+        self.verticalLayout_23.setSpacing(0)
+        self.verticalLayout_23.setObjectName(u"verticalLayout_23")
+        self.verticalLayout_23.setContentsMargins(0, 0, 0, 0)
         self.sidebar_button_area = QWidget(self.sidebar)
         self.sidebar_button_area.setObjectName(u"sidebar_button_area")
-        self.verticalLayout_22 = QVBoxLayout(self.sidebar_button_area)
-        self.verticalLayout_22.setObjectName(u"verticalLayout_22")
+        self.verticalLayout_24 = QVBoxLayout(self.sidebar_button_area)
+        self.verticalLayout_24.setObjectName(u"verticalLayout_24")
         self.home_button = QPushButton(self.sidebar_button_area)
         self.home_button.setObjectName(u"home_button")
         font = QFont()
@@ -138,7 +148,7 @@ class Ui_MainWindow(object):
         self.home_button.setAutoDefault(False)
         self.home_button.setFlat(False)
 
-        self.verticalLayout_22.addWidget(self.home_button)
+        self.verticalLayout_24.addWidget(self.home_button)
 
         self.browse_button = QPushButton(self.sidebar_button_area)
         self.browse_button.setObjectName(u"browse_button")
@@ -155,7 +165,7 @@ class Ui_MainWindow(object):
         self.browse_button.setAutoExclusive(True)
         self.browse_button.setFlat(False)
 
-        self.verticalLayout_22.addWidget(self.browse_button)
+        self.verticalLayout_24.addWidget(self.browse_button)
 
         self.library_button = QPushButton(self.sidebar_button_area)
         self.library_button.setObjectName(u"library_button")
@@ -172,7 +182,7 @@ class Ui_MainWindow(object):
         self.library_button.setAutoExclusive(True)
         self.library_button.setFlat(False)
 
-        self.verticalLayout_22.addWidget(self.library_button)
+        self.verticalLayout_24.addWidget(self.library_button)
 
         self.profile_button = QPushButton(self.sidebar_button_area)
         self.profile_button.setObjectName(u"profile_button")
@@ -189,27 +199,27 @@ class Ui_MainWindow(object):
         self.profile_button.setAutoExclusive(True)
         self.profile_button.setFlat(False)
 
-        self.verticalLayout_22.addWidget(self.profile_button)
+        self.verticalLayout_24.addWidget(self.profile_button)
 
 
-        self.verticalLayout.addWidget(self.sidebar_button_area)
+        self.verticalLayout_23.addWidget(self.sidebar_button_area)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.verticalLayout.addItem(self.verticalSpacer)
+        self.verticalLayout_23.addItem(self.verticalSpacer_6)
 
         self.player_widget = QWidget(self.sidebar)
         self.player_widget.setObjectName(u"player_widget")
         self.player_widget.setMinimumSize(QSize(0, 0))
-        self.verticalLayout_2 = QVBoxLayout(self.player_widget)
-        self.verticalLayout_2.setSpacing(10)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(18, 18, 18, 18)
+        self.verticalLayout_25 = QVBoxLayout(self.player_widget)
+        self.verticalLayout_25.setSpacing(10)
+        self.verticalLayout_25.setObjectName(u"verticalLayout_25")
+        self.verticalLayout_25.setContentsMargins(18, 18, 18, 18)
         self.thumbnail = QLabel(self.player_widget)
         self.thumbnail.setObjectName(u"thumbnail")
         self.thumbnail.setMinimumSize(QSize(240, 240))
 
-        self.verticalLayout_2.addWidget(self.thumbnail)
+        self.verticalLayout_25.addWidget(self.thumbnail)
 
         self.player_song_label = QLabel(self.player_widget)
         self.player_song_label.setObjectName(u"player_song_label")
@@ -219,7 +229,7 @@ class Ui_MainWindow(object):
         font1.setBold(True)
         self.player_song_label.setFont(font1)
 
-        self.verticalLayout_2.addWidget(self.player_song_label)
+        self.verticalLayout_25.addWidget(self.player_song_label)
 
         self.player_artist_label = QLabel(self.player_widget)
         self.player_artist_label.setObjectName(u"player_artist_label")
@@ -228,25 +238,25 @@ class Ui_MainWindow(object):
         font2.setPointSize(10)
         self.player_artist_label.setFont(font2)
 
-        self.verticalLayout_2.addWidget(self.player_artist_label)
+        self.verticalLayout_25.addWidget(self.player_artist_label)
 
         self.player_slider = QSlider(self.player_widget)
         self.player_slider.setObjectName(u"player_slider")
         self.player_slider.setOrientation(Qt.Horizontal)
 
-        self.verticalLayout_2.addWidget(self.player_slider)
+        self.verticalLayout_25.addWidget(self.player_slider)
 
         self.player_duration_widget = QWidget(self.player_widget)
         self.player_duration_widget.setObjectName(u"player_duration_widget")
-        self.horizontalLayout = QHBoxLayout(self.player_duration_widget)
-        self.horizontalLayout.setSpacing(0)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_2 = QHBoxLayout(self.player_duration_widget)
+        self.horizontalLayout_2.setSpacing(0)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.player_startdur_label = QLabel(self.player_duration_widget)
         self.player_startdur_label.setObjectName(u"player_startdur_label")
         self.player_startdur_label.setFont(font2)
 
-        self.horizontalLayout.addWidget(self.player_startdur_label)
+        self.horizontalLayout_2.addWidget(self.player_startdur_label)
 
         self.player_enddur_label = QLabel(self.player_duration_widget)
         self.player_enddur_label.setObjectName(u"player_enddur_label")
@@ -257,10 +267,10 @@ class Ui_MainWindow(object):
         self.player_enddur_label.setFont(font3)
         self.player_enddur_label.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.horizontalLayout.addWidget(self.player_enddur_label)
+        self.horizontalLayout_2.addWidget(self.player_enddur_label)
 
 
-        self.verticalLayout_2.addWidget(self.player_duration_widget)
+        self.verticalLayout_25.addWidget(self.player_duration_widget)
 
         self.playback_controls = QWidget(self.player_widget)
         self.playback_controls.setObjectName(u"playback_controls")
@@ -294,15 +304,15 @@ class Ui_MainWindow(object):
         self.previous_btn.setIcon(icon6)
         self.previous_btn.setIconSize(QSize(24, 24))
 
-        self.verticalLayout_2.addWidget(self.playback_controls)
+        self.verticalLayout_25.addWidget(self.playback_controls)
 
 
-        self.verticalLayout.addWidget(self.player_widget)
+        self.verticalLayout_23.addWidget(self.player_widget)
 
 
-        self.horizontalLayout_2.addWidget(self.sidebar)
+        self.horizontalLayout_7.addWidget(self.sidebar)
 
-        self.content = QWidget(self.centralwidget)
+        self.content = QWidget(self.main_page)
         self.content.setObjectName(u"content")
         self.content.setEnabled(True)
         self.gridLayout_2 = QGridLayout(self.content)
@@ -429,7 +439,7 @@ class Ui_MainWindow(object):
         self.browse_page_scrollarea.setWidgetResizable(True)
         self.browse_page_scrollearea_contents = QWidget()
         self.browse_page_scrollearea_contents.setObjectName(u"browse_page_scrollearea_contents")
-        self.browse_page_scrollearea_contents.setGeometry(QRect(0, 0, 788, 745))
+        self.browse_page_scrollearea_contents.setGeometry(QRect(0, 0, 232, 172))
         self.gridLayout = QGridLayout(self.browse_page_scrollearea_contents)
         self.gridLayout.setObjectName(u"gridLayout")
         self.search_section = QWidget(self.browse_page_scrollearea_contents)
@@ -563,7 +573,7 @@ class Ui_MainWindow(object):
         self.library_page_scrollarea.setWidgetResizable(True)
         self.library_page_scrollarea_contents = QWidget()
         self.library_page_scrollarea_contents.setObjectName(u"library_page_scrollarea_contents")
-        self.library_page_scrollarea_contents.setGeometry(QRect(0, 0, 788, 686))
+        self.library_page_scrollarea_contents.setGeometry(QRect(0, 0, 163, 41))
         self.verticalLayout_13 = QVBoxLayout(self.library_page_scrollarea_contents)
         self.verticalLayout_13.setObjectName(u"verticalLayout_13")
         self.library_contents = QWidget(self.library_page_scrollarea_contents)
@@ -659,6 +669,7 @@ class Ui_MainWindow(object):
         self.settings_contents = QWidget(self.profile_settings)
         self.settings_contents.setObjectName(u"settings_contents")
         self.verticalLayout_20 = QVBoxLayout(self.settings_contents)
+        self.verticalLayout_20.setSpacing(0)
         self.verticalLayout_20.setObjectName(u"verticalLayout_20")
         self.verticalLayout_20.setContentsMargins(9, 9, 9, 9)
 
@@ -687,11 +698,6 @@ class Ui_MainWindow(object):
         self.playlist_image_widget.setObjectName(u"playlist_image_widget")
         self.gridLayout_3 = QGridLayout(self.playlist_image_widget)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.playlist_image = QWidget(self.playlist_image_widget)
-        self.playlist_image.setObjectName(u"playlist_image")
-
-        self.gridLayout_3.addWidget(self.playlist_image, 0, 0, 1, 1)
-
         self.splitter.addWidget(self.playlist_image_widget)
         self.playlist_contents_widget = QWidget(self.splitter)
         self.playlist_contents_widget.setObjectName(u"playlist_contents_widget")
@@ -710,20 +716,22 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_6.addWidget(self.playlist_name_label)
 
-        self.playlist_add_song_button = QToolButton(self.playlist_contents_header)
-        self.playlist_add_song_button.setObjectName(u"playlist_add_song_button")
-        self.playlist_add_song_button.setCursor(QCursor(Qt.PointingHandCursor))
-        self.playlist_add_song_button.setIcon(icon8)
-        self.playlist_add_song_button.setIconSize(QSize(32, 32))
+        self.playlist_shuffle_button = QToolButton(self.playlist_contents_header)
+        self.playlist_shuffle_button.setObjectName(u"playlist_shuffle_button")
+        self.playlist_shuffle_button.setCursor(QCursor(Qt.PointingHandCursor))
+        icon10 = QIcon()
+        icon10.addFile(u":/resources/assets/images/shuffle.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.playlist_shuffle_button.setIcon(icon10)
+        self.playlist_shuffle_button.setIconSize(QSize(32, 32))
 
-        self.horizontalLayout_6.addWidget(self.playlist_add_song_button)
+        self.horizontalLayout_6.addWidget(self.playlist_shuffle_button)
 
         self.playlist_play_button = QToolButton(self.playlist_contents_header)
         self.playlist_play_button.setObjectName(u"playlist_play_button")
         self.playlist_play_button.setCursor(QCursor(Qt.PointingHandCursor))
-        icon10 = QIcon()
-        icon10.addFile(u":/resources/assets/images/play_ver2.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.playlist_play_button.setIcon(icon10)
+        icon11 = QIcon()
+        icon11.addFile(u":/resources/assets/images/play_ver2.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.playlist_play_button.setIcon(icon11)
         self.playlist_play_button.setIconSize(QSize(32, 32))
 
         self.horizontalLayout_6.addWidget(self.playlist_play_button)
@@ -736,13 +744,21 @@ class Ui_MainWindow(object):
         self.playlist_contents_scrollarea.setWidgetResizable(True)
         self.playlist_contents_scrollarea_contents = QWidget()
         self.playlist_contents_scrollarea_contents.setObjectName(u"playlist_contents_scrollarea_contents")
-        self.playlist_contents_scrollarea_contents.setGeometry(QRect(0, 0, 770, 560))
+        self.playlist_contents_scrollarea_contents.setGeometry(QRect(0, 0, 770, 598))
         self.verticalLayout_18 = QVBoxLayout(self.playlist_contents_scrollarea_contents)
         self.verticalLayout_18.setObjectName(u"verticalLayout_18")
-        self.playlist_no_songs_label = QLabel(self.playlist_contents_scrollarea_contents)
+        self.playlist_contents = QWidget(self.playlist_contents_scrollarea_contents)
+        self.playlist_contents.setObjectName(u"playlist_contents")
+        self.verticalLayout = QVBoxLayout(self.playlist_contents)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.playlist_no_songs_label = QLabel(self.playlist_contents)
         self.playlist_no_songs_label.setObjectName(u"playlist_no_songs_label")
 
-        self.verticalLayout_18.addWidget(self.playlist_no_songs_label)
+        self.verticalLayout.addWidget(self.playlist_no_songs_label)
+
+
+        self.verticalLayout_18.addWidget(self.playlist_contents)
 
         self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -761,14 +777,120 @@ class Ui_MainWindow(object):
         self.gridLayout_2.addWidget(self.pages_widget, 0, 0, 1, 1)
 
 
-        self.horizontalLayout_2.addWidget(self.content)
+        self.horizontalLayout_7.addWidget(self.content)
+
+        self.stackedWidget.addWidget(self.main_page)
+        self.login_page = QWidget()
+        self.login_page.setObjectName(u"login_page")
+        self.verticalLayout_26 = QVBoxLayout(self.login_page)
+        self.verticalLayout_26.setObjectName(u"verticalLayout_26")
+        self.login_content = QWidget(self.login_page)
+        self.login_content.setObjectName(u"login_content")
+        self.login_form_container = QWidget(self.login_content)
+        self.login_form_container.setObjectName(u"login_form_container")
+        self.login_form_container.setGeometry(QRect(320, 220, 391, 311))
+        sizePolicy6 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.login_form_container.sizePolicy().hasHeightForWidth())
+        self.login_form_container.setSizePolicy(sizePolicy6)
+        self.verticalLayout_27 = QVBoxLayout(self.login_form_container)
+        self.verticalLayout_27.setSpacing(6)
+        self.verticalLayout_27.setObjectName(u"verticalLayout_27")
+        self.username_container = QWidget(self.login_form_container)
+        self.username_container.setObjectName(u"username_container")
+        sizePolicy2.setHeightForWidth(self.username_container.sizePolicy().hasHeightForWidth())
+        self.username_container.setSizePolicy(sizePolicy2)
+        self.verticalLayout_28 = QVBoxLayout(self.username_container)
+        self.verticalLayout_28.setObjectName(u"verticalLayout_28")
+        self.username_label = QLabel(self.username_container)
+        self.username_label.setObjectName(u"username_label")
+
+        self.verticalLayout_28.addWidget(self.username_label)
+
+        self.username_input = QLineEdit(self.username_container)
+        self.username_input.setObjectName(u"username_input")
+
+        self.verticalLayout_28.addWidget(self.username_input)
+
+
+        self.verticalLayout_27.addWidget(self.username_container)
+
+        self.widget = QWidget(self.login_form_container)
+        self.widget.setObjectName(u"widget")
+        sizePolicy2.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
+        self.widget.setSizePolicy(sizePolicy2)
+        self.verticalLayout_29 = QVBoxLayout(self.widget)
+        self.verticalLayout_29.setObjectName(u"verticalLayout_29")
+        self.username_label_2 = QLabel(self.widget)
+        self.username_label_2.setObjectName(u"username_label_2")
+
+        self.verticalLayout_29.addWidget(self.username_label_2)
+
+        self.username_input_2 = QLineEdit(self.widget)
+        self.username_input_2.setObjectName(u"username_input_2")
+
+        self.verticalLayout_29.addWidget(self.username_input_2)
+
+
+        self.verticalLayout_27.addWidget(self.widget)
+
+        self.widget_2 = QWidget(self.login_form_container)
+        self.widget_2.setObjectName(u"widget_2")
+        self.horizontalLayout_8 = QHBoxLayout(self.widget_2)
+        self.horizontalLayout_8.setSpacing(10)
+        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
+        self.horizontalLayout_8.setContentsMargins(4, 4, 4, 4)
+        self.checkBox = QCheckBox(self.widget_2)
+        self.checkBox.setObjectName(u"checkBox")
+        sizePolicy7 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        sizePolicy7.setHorizontalStretch(0)
+        sizePolicy7.setVerticalStretch(0)
+        sizePolicy7.setHeightForWidth(self.checkBox.sizePolicy().hasHeightForWidth())
+        self.checkBox.setSizePolicy(sizePolicy7)
+        self.checkBox.setChecked(False)
+
+        self.horizontalLayout_8.addWidget(self.checkBox)
+
+        self.label = QLabel(self.widget_2)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout_8.addWidget(self.label)
+
+
+        self.verticalLayout_27.addWidget(self.widget_2)
+
+        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_27.addItem(self.verticalSpacer_7)
+
+        self.pushButton = QPushButton(self.login_form_container)
+        self.pushButton.setObjectName(u"pushButton")
+
+        self.verticalLayout_27.addWidget(self.pushButton)
+
+        self.sign_up_label = QLabel(self.login_form_container)
+        self.sign_up_label.setObjectName(u"sign_up_label")
+        self.sign_up_label.setMinimumSize(QSize(0, 30))
+        self.sign_up_label.setMaximumSize(QSize(16777215, 16777215))
+        self.sign_up_label.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_27.addWidget(self.sign_up_label)
+
+
+        self.verticalLayout_26.addWidget(self.login_content)
+
+        self.stackedWidget.addWidget(self.login_page)
+
+        self.gridLayout_5.addWidget(self.stackedWidget, 0, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
 
+        self.stackedWidget.setCurrentIndex(0)
         self.home_button.setDefault(False)
-        self.pages_widget.setCurrentIndex(2)
+        self.pages_widget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -805,8 +927,14 @@ class Ui_MainWindow(object):
         self.user_profile_button.setText(QCoreApplication.translate("MainWindow", u"  Profile Name", None))
         self.settings_label.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.playlist_name_label.setText(QCoreApplication.translate("MainWindow", u"Playlist Name", None))
-        self.playlist_add_song_button.setText("")
+        self.playlist_shuffle_button.setText("")
         self.playlist_play_button.setText("")
         self.playlist_no_songs_label.setText(QCoreApplication.translate("MainWindow", u"This playlist has no songs.", None))
+        self.username_label.setText(QCoreApplication.translate("MainWindow", u"Username", None))
+        self.username_label_2.setText(QCoreApplication.translate("MainWindow", u"Password", None))
+        self.checkBox.setText("")
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Remember me", None))
+        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Login", None))
+        self.sign_up_label.setText(QCoreApplication.translate("MainWindow", u"Don't have an account? Click here to sign up", None))
     # retranslateUi
 
