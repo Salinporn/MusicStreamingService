@@ -1,16 +1,20 @@
 import persistent
+from persistent.list import PersistentList
 import abc
 
 class User(persistent.Persistent):
     def __init__(self, uuid, email, name, password_hash, is_admin=False):
-        self.uuid = uuid
-        self.email = email
-        self.name = name
-        self.password_hash = password_hash
-        self.is_admin = is_admin
+        self.uuid: str = uuid
+        self.email: str = email
+        self.name: str = name
+        self.password_hash: str = password_hash
+        self.is_admin: bool = is_admin
         
-        self.playlists
-        self.favorites
+        self.playlists = PersistentList()
+        self.recently_played = PersistentList()
+    
+    def get_uuid(self):
+        return self.uuid
     
     def get_email(self):
         return self.email
