@@ -16,11 +16,11 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QGridLayout, QHBoxLayout,
-    QLabel, QLineEdit, QMainWindow, QPushButton,
-    QScrollArea, QSizePolicy, QSlider, QSpacerItem,
-    QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
-    QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
+    QGridLayout, QHBoxLayout, QLabel, QLineEdit,
+    QMainWindow, QPushButton, QScrollArea, QSizePolicy,
+    QSlider, QSpacerItem, QSplitter, QStackedWidget,
+    QToolButton, QVBoxLayout, QWidget)
 import resource_rc
 import resource_rc
 
@@ -29,8 +29,7 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(1088, 765)
-        MainWindow.setStyleSheet(u"\n"
-"/* general styles */\n"
+        MainWindow.setStyleSheet(u"/* general styles */\n"
 "\n"
 "* {\n"
 "	color: #ffffff;\n"
@@ -40,7 +39,12 @@ class Ui_MainWindow(object):
 "	background-color: #1e1e1e;\n"
 "}\n"
 "\n"
-"#content * {\n"
+"QPushButton:focus {\n"
+"    border: none;\n"
+"    outline: none;\n"
+"}\n"
+"\n"
+"#content *, #login_content, #register_content, #player_page {\n"
 "	background-color: #111111;\n"
 "}\n"
 "\n"
@@ -69,6 +73,50 @@ class Ui_MainWindow(object):
 "	padding: 10px\n"
 "}\n"
 "\n"
+"/* login page & register page styles */\n"
+"#login_content #login_page_label, #register_content #register_page_label {\n"
+"	font-size: 20px;\n"
+"}\n"
+"\n"
+"#login_content *, #register_content * {\n"
+"	font-size: 16px;\n"
+"}\n"
+"\n"
+"#login_content #login_form_container, #register_content #register_form_"
+                        "container {\n"
+"	background-color: #303030;\n"
+"	border-radius: 5px;\n"
+"}\n"
+"\n"
+"#login_content QLineEdit, #register_content QLineEdit {\n"
+"	color: black;\n"
+"	background-color: white;\n"
+"	border-radius: 5px;\n"
+"}\n"
+"\n"
+"#login_content #login_button, #register_content #register_button {\n"
+"	border-radius: 5px;\n"
+"	background-color: rgb(0, 175, 0);\n"
+"	padding: 5px; \n"
+"	margin: 0 8px 0 8px;\n"
+"}\n"
+"\n"
+"#login_content #login_button:hover, #register_content #register_button:hover {\n"
+"	background-color:rgb(0, 158, 0);\n"
+"}\n"
+"\n"
+"#login_content #sign_up_container #sign_up_button,\n"
+"#register_content #sign_in_container #sign_in_button {\n"
+"	background-color: #303030;\n"
+"	border: none;\n"
+"	text-align: left;\n"
+"}\n"
+"\n"
+"#login_content #sign_up_container #sign_up_button:hover,\n"
+"#register_content #sign_in_container #sign_in_button:hover {\n"
+"	text-decoration: underline;\n"
+"}\n"
+"\n"
 "/* sidebar styles */\n"
 "\n"
 "#thumbnail {\n"
@@ -76,7 +124,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "\n"
-"/* home page styles */\n"
+"/* home "
+                        "page styles */\n"
 "\n"
 "#home_page #home_page_scrollarea_contents > QWidget {\n"
 "	border-radius: 5px;\n"
@@ -90,8 +139,7 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "/* profile page styles */\n"
-"#use"
-                        "r_profile_button {\n"
+"#user_profile_button {\n"
 "	font-size: 18px;\n"
 "	padding: 4px;\n"
 "	text-align: left;\n"
@@ -102,6 +150,50 @@ class Ui_MainWindow(object):
 "/* playlist page styles */\n"
 "#playlist_contents_scrollarea {\n"
 "	border: 1px solid #D0D0D0;\n"
+"}\n"
+"\n"
+"/* settings page styles */\n"
+"#settings_language_page QComboBox,  \n"
+"#settings_theme_page QComboBox {\n"
+"	background-color: white;\n"
+"	padding: 2px;\n"
+"	color: black;\n"
+"	border: none;\n"
+"}\n"
+"\n"
+"#settings_language_page QPushButton, \n"
+"#settings_theme_page QPushButton {\n"
+"	border-radius: 5px;\n"
+"	background-color: #1e1e1e;\n"
+"	padding: 5px 20px;\n"
+"	color: #dddddd;\n"
+"}\n"
+"\n"
+"#settings_language_page QPushButton:hover,\n"
+"#settin"
+                        "gs_theme_page QPushButton:hover {\n"
+"	background-color: #303030;\n"
+"	color: #ffffff;\n"
+"}\n"
+"\n"
+"#settings_theme_page #settings_theme_content #theme_scrollArea #settings_theme_widget #theme_preview_content {\n"
+"	border-radius: 5px;\n"
+"	border: 1px solid #D0D0D0;\n"
+"}	\n"
+"\n"
+"#settings_about_page #about_page_content #about_page_scrollArea #about_content #about_us_label {\n"
+"	margin: 10px 0;\n"
+"	padding: 5px;\n"
+"	border: 1px solid #D0D0D0;\n"
+"	border-radius: 5px;\n"
+"}\n"
+"\n"
+"#settings_about_page #about_page_content #about_page_scrollArea #about_content #team_member_label\n"
+"{\n"
+"	margin: 10px 0;\n"
+"	padding: 5px;\n"
+"	border: 1px solid #D0D0D0;\n"
+"	border-radius: 5px;\n"
 "}")
         self.actionExit = QAction(MainWindow)
         self.actionExit.setObjectName(u"actionExit")
@@ -439,7 +531,7 @@ class Ui_MainWindow(object):
         self.browse_page_scrollarea.setWidgetResizable(True)
         self.browse_page_scrollearea_contents = QWidget()
         self.browse_page_scrollearea_contents.setObjectName(u"browse_page_scrollearea_contents")
-        self.browse_page_scrollearea_contents.setGeometry(QRect(0, 0, 232, 172))
+        self.browse_page_scrollearea_contents.setGeometry(QRect(0, 0, 788, 745))
         self.gridLayout = QGridLayout(self.browse_page_scrollearea_contents)
         self.gridLayout.setObjectName(u"gridLayout")
         self.search_section = QWidget(self.browse_page_scrollearea_contents)
@@ -573,7 +665,7 @@ class Ui_MainWindow(object):
         self.library_page_scrollarea.setWidgetResizable(True)
         self.library_page_scrollarea_contents = QWidget()
         self.library_page_scrollarea_contents.setObjectName(u"library_page_scrollarea_contents")
-        self.library_page_scrollarea_contents.setGeometry(QRect(0, 0, 163, 41))
+        self.library_page_scrollarea_contents.setGeometry(QRect(0, 0, 788, 686))
         self.verticalLayout_13 = QVBoxLayout(self.library_page_scrollarea_contents)
         self.verticalLayout_13.setObjectName(u"verticalLayout_13")
         self.library_contents = QWidget(self.library_page_scrollarea_contents)
@@ -773,6 +865,257 @@ class Ui_MainWindow(object):
         self.verticalLayout_16.addWidget(self.splitter)
 
         self.pages_widget.addWidget(self.playlist_page)
+        self.settings_about_page = QWidget()
+        self.settings_about_page.setObjectName(u"settings_about_page")
+        self.verticalLayout_2 = QVBoxLayout(self.settings_about_page)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.about_page_content = QWidget(self.settings_about_page)
+        self.about_page_content.setObjectName(u"about_page_content")
+        font4 = QFont()
+        font4.setPointSize(9)
+        self.about_page_content.setFont(font4)
+        self.verticalLayout_41 = QVBoxLayout(self.about_page_content)
+        self.verticalLayout_41.setObjectName(u"verticalLayout_41")
+        self.settings_theme_page_label_2 = QLabel(self.about_page_content)
+        self.settings_theme_page_label_2.setObjectName(u"settings_theme_page_label_2")
+        sizePolicy2.setHeightForWidth(self.settings_theme_page_label_2.sizePolicy().hasHeightForWidth())
+        self.settings_theme_page_label_2.setSizePolicy(sizePolicy2)
+        self.settings_theme_page_label_2.setFont(font1)
+        self.settings_theme_page_label_2.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_41.addWidget(self.settings_theme_page_label_2)
+
+        self.about_page_scrollArea = QScrollArea(self.about_page_content)
+        self.about_page_scrollArea.setObjectName(u"about_page_scrollArea")
+        self.about_page_scrollArea.setFrameShape(QFrame.NoFrame)
+        self.about_page_scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.about_page_scrollArea.setWidgetResizable(True)
+        self.about_content = QWidget()
+        self.about_content.setObjectName(u"about_content")
+        self.about_content.setGeometry(QRect(0, 0, 772, 700))
+        self.verticalLayout_42 = QVBoxLayout(self.about_content)
+        self.verticalLayout_42.setObjectName(u"verticalLayout_42")
+        self.about_us_label = QLabel(self.about_content)
+        self.about_us_label.setObjectName(u"about_us_label")
+        font5 = QFont()
+        font5.setPointSize(12)
+        font5.setBold(True)
+        self.about_us_label.setFont(font5)
+        self.about_us_label.setFrameShape(QFrame.Box)
+
+        self.verticalLayout_42.addWidget(self.about_us_label)
+
+        self.about_us_2 = QLabel(self.about_content)
+        self.about_us_2.setObjectName(u"about_us_2")
+        font6 = QFont()
+        font6.setPointSize(12)
+        self.about_us_2.setFont(font6)
+        self.about_us_2.setWordWrap(True)
+        self.about_us_2.setMargin(4)
+
+        self.verticalLayout_42.addWidget(self.about_us_2)
+
+        self.team_member_label = QLabel(self.about_content)
+        self.team_member_label.setObjectName(u"team_member_label")
+        self.team_member_label.setFont(font5)
+        self.team_member_label.setFrameShape(QFrame.Box)
+
+        self.verticalLayout_42.addWidget(self.team_member_label)
+
+        self.member = QLabel(self.about_content)
+        self.member.setObjectName(u"member")
+        self.member.setFont(font6)
+        self.member.setMargin(4)
+
+        self.verticalLayout_42.addWidget(self.member)
+
+        self.member_2 = QLabel(self.about_content)
+        self.member_2.setObjectName(u"member_2")
+        self.member_2.setFont(font6)
+        self.member_2.setMargin(4)
+
+        self.verticalLayout_42.addWidget(self.member_2)
+
+        self.member_3 = QLabel(self.about_content)
+        self.member_3.setObjectName(u"member_3")
+        self.member_3.setFont(font6)
+        self.member_3.setMargin(4)
+
+        self.verticalLayout_42.addWidget(self.member_3)
+
+        self.verticalSpacer_13 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_42.addItem(self.verticalSpacer_13)
+
+        self.about_page_scrollArea.setWidget(self.about_content)
+
+        self.verticalLayout_41.addWidget(self.about_page_scrollArea)
+
+
+        self.verticalLayout_2.addWidget(self.about_page_content)
+
+        self.pages_widget.addWidget(self.settings_about_page)
+        self.settings_language_page = QWidget()
+        self.settings_language_page.setObjectName(u"settings_language_page")
+        self.verticalLayout_26 = QVBoxLayout(self.settings_language_page)
+        self.verticalLayout_26.setObjectName(u"verticalLayout_26")
+        self.settings_language_content = QWidget(self.settings_language_page)
+        self.settings_language_content.setObjectName(u"settings_language_content")
+        self.verticalLayout_31 = QVBoxLayout(self.settings_language_content)
+        self.verticalLayout_31.setObjectName(u"verticalLayout_31")
+        self.setting_language_page_label = QLabel(self.settings_language_content)
+        self.setting_language_page_label.setObjectName(u"setting_language_page_label")
+        sizePolicy2.setHeightForWidth(self.setting_language_page_label.sizePolicy().hasHeightForWidth())
+        self.setting_language_page_label.setSizePolicy(sizePolicy2)
+        self.setting_language_page_label.setFont(font1)
+        self.setting_language_page_label.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_31.addWidget(self.setting_language_page_label)
+
+        self.language_header = QWidget(self.settings_language_content)
+        self.language_header.setObjectName(u"language_header")
+        self.horizontalLayout_14 = QHBoxLayout(self.language_header)
+        self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
+        self.horizontalLayout_14.setContentsMargins(-1, 10, -1, -1)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_14.addItem(self.horizontalSpacer)
+
+        self.apply_language_button = QPushButton(self.language_header)
+        self.apply_language_button.setObjectName(u"apply_language_button")
+        self.apply_language_button.setFont(font6)
+        self.apply_language_button.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.horizontalLayout_14.addWidget(self.apply_language_button)
+
+
+        self.verticalLayout_31.addWidget(self.language_header)
+
+        self.langauge_content = QWidget(self.settings_language_content)
+        self.langauge_content.setObjectName(u"langauge_content")
+        self.horizontalLayout_15 = QHBoxLayout(self.langauge_content)
+        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
+        self.language_label = QLabel(self.langauge_content)
+        self.language_label.setObjectName(u"language_label")
+        self.language_label.setFont(font6)
+
+        self.horizontalLayout_15.addWidget(self.language_label)
+
+        self.language_comboBox = QComboBox(self.langauge_content)
+        self.language_comboBox.addItem("")
+        self.language_comboBox.addItem("")
+        self.language_comboBox.setObjectName(u"language_comboBox")
+        self.language_comboBox.setFont(font6)
+        self.language_comboBox.setCursor(QCursor(Qt.ArrowCursor))
+
+        self.horizontalLayout_15.addWidget(self.language_comboBox)
+
+
+        self.verticalLayout_31.addWidget(self.langauge_content)
+
+        self.verticalSpacer_10 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_31.addItem(self.verticalSpacer_10)
+
+
+        self.verticalLayout_26.addWidget(self.settings_language_content)
+
+        self.pages_widget.addWidget(self.settings_language_page)
+        self.settings_theme_page = QWidget()
+        self.settings_theme_page.setObjectName(u"settings_theme_page")
+        self.verticalLayout_30 = QVBoxLayout(self.settings_theme_page)
+        self.verticalLayout_30.setObjectName(u"verticalLayout_30")
+        self.settings_theme_content = QWidget(self.settings_theme_page)
+        self.settings_theme_content.setObjectName(u"settings_theme_content")
+        self.verticalLayout_37 = QVBoxLayout(self.settings_theme_content)
+        self.verticalLayout_37.setObjectName(u"verticalLayout_37")
+        self.settings_theme_page_label = QLabel(self.settings_theme_content)
+        self.settings_theme_page_label.setObjectName(u"settings_theme_page_label")
+        sizePolicy2.setHeightForWidth(self.settings_theme_page_label.sizePolicy().hasHeightForWidth())
+        self.settings_theme_page_label.setSizePolicy(sizePolicy2)
+        self.settings_theme_page_label.setFont(font1)
+        self.settings_theme_page_label.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_37.addWidget(self.settings_theme_page_label)
+
+        self.theme_header = QWidget(self.settings_theme_content)
+        self.theme_header.setObjectName(u"theme_header")
+        self.horizontalLayout_16 = QHBoxLayout(self.theme_header)
+        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
+        self.horizontalLayout_16.setContentsMargins(-1, 10, -1, -1)
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_16.addItem(self.horizontalSpacer_2)
+
+        self.apply_theme_button = QPushButton(self.theme_header)
+        self.apply_theme_button.setObjectName(u"apply_theme_button")
+        self.apply_theme_button.setFont(font6)
+        self.apply_theme_button.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.horizontalLayout_16.addWidget(self.apply_theme_button)
+
+
+        self.verticalLayout_37.addWidget(self.theme_header)
+
+        self.theme_scrollArea = QScrollArea(self.settings_theme_content)
+        self.theme_scrollArea.setObjectName(u"theme_scrollArea")
+        self.theme_scrollArea.setFrameShape(QFrame.NoFrame)
+        self.theme_scrollArea.setLineWidth(0)
+        self.theme_scrollArea.setWidgetResizable(True)
+        self.settings_theme_widget = QWidget()
+        self.settings_theme_widget.setObjectName(u"settings_theme_widget")
+        self.settings_theme_widget.setGeometry(QRect(0, 0, 772, 321))
+        self.verticalLayout_39 = QVBoxLayout(self.settings_theme_widget)
+        self.verticalLayout_39.setObjectName(u"verticalLayout_39")
+        self.settings_theme_content_2 = QWidget(self.settings_theme_widget)
+        self.settings_theme_content_2.setObjectName(u"settings_theme_content_2")
+        self.horizontalLayout_18 = QHBoxLayout(self.settings_theme_content_2)
+        self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
+        self.current_theme_label = QLabel(self.settings_theme_content_2)
+        self.current_theme_label.setObjectName(u"current_theme_label")
+        self.current_theme_label.setFont(font6)
+
+        self.horizontalLayout_18.addWidget(self.current_theme_label)
+
+        self.theme_comboBox_ = QComboBox(self.settings_theme_content_2)
+        self.theme_comboBox_.addItem("")
+        self.theme_comboBox_.setObjectName(u"theme_comboBox_")
+        self.theme_comboBox_.setFont(font6)
+        self.theme_comboBox_.setCursor(QCursor(Qt.ArrowCursor))
+
+        self.horizontalLayout_18.addWidget(self.theme_comboBox_)
+
+
+        self.verticalLayout_39.addWidget(self.settings_theme_content_2)
+
+        self.theme_preview_label = QLabel(self.settings_theme_widget)
+        self.theme_preview_label.setObjectName(u"theme_preview_label")
+        self.theme_preview_label.setFont(font6)
+        self.theme_preview_label.setMargin(9)
+
+        self.verticalLayout_39.addWidget(self.theme_preview_label)
+
+        self.theme_preview_content = QWidget(self.settings_theme_widget)
+        self.theme_preview_content.setObjectName(u"theme_preview_content")
+
+        self.verticalLayout_39.addWidget(self.theme_preview_content)
+
+        self.verticalSpacer_12 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_39.addItem(self.verticalSpacer_12)
+
+        self.theme_scrollArea.setWidget(self.settings_theme_widget)
+
+        self.verticalLayout_37.addWidget(self.theme_scrollArea)
+
+        self.verticalSpacer_11 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_37.addItem(self.verticalSpacer_11)
+
+
+        self.verticalLayout_30.addWidget(self.settings_theme_content)
+
+        self.pages_widget.addWidget(self.settings_theme_page)
 
         self.gridLayout_2.addWidget(self.pages_widget, 0, 0, 1, 1)
 
@@ -782,13 +1125,16 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.main_page)
         self.login_page = QWidget()
         self.login_page.setObjectName(u"login_page")
-        self.verticalLayout_26 = QVBoxLayout(self.login_page)
-        self.verticalLayout_26.setObjectName(u"verticalLayout_26")
+        self.gridLayout_6 = QGridLayout(self.login_page)
+        self.gridLayout_6.setSpacing(0)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
         self.login_content = QWidget(self.login_page)
         self.login_content.setObjectName(u"login_content")
+        self.gridLayout_4 = QGridLayout(self.login_content)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.login_form_container = QWidget(self.login_content)
         self.login_form_container.setObjectName(u"login_form_container")
-        self.login_form_container.setGeometry(QRect(320, 220, 391, 311))
         sizePolicy6 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
@@ -797,90 +1143,441 @@ class Ui_MainWindow(object):
         self.verticalLayout_27 = QVBoxLayout(self.login_form_container)
         self.verticalLayout_27.setSpacing(6)
         self.verticalLayout_27.setObjectName(u"verticalLayout_27")
-        self.username_container = QWidget(self.login_form_container)
-        self.username_container.setObjectName(u"username_container")
-        sizePolicy2.setHeightForWidth(self.username_container.sizePolicy().hasHeightForWidth())
-        self.username_container.setSizePolicy(sizePolicy2)
-        self.verticalLayout_28 = QVBoxLayout(self.username_container)
+        self.login_page_label = QLabel(self.login_form_container)
+        self.login_page_label.setObjectName(u"login_page_label")
+        font7 = QFont()
+        font7.setBold(True)
+        self.login_page_label.setFont(font7)
+        self.login_page_label.setAlignment(Qt.AlignCenter)
+        self.login_page_label.setMargin(5)
+
+        self.verticalLayout_27.addWidget(self.login_page_label)
+
+        self.login_email_container = QWidget(self.login_form_container)
+        self.login_email_container.setObjectName(u"login_email_container")
+        sizePolicy2.setHeightForWidth(self.login_email_container.sizePolicy().hasHeightForWidth())
+        self.login_email_container.setSizePolicy(sizePolicy2)
+        self.verticalLayout_28 = QVBoxLayout(self.login_email_container)
         self.verticalLayout_28.setObjectName(u"verticalLayout_28")
-        self.username_label = QLabel(self.username_container)
-        self.username_label.setObjectName(u"username_label")
+        self.login_email_label = QLabel(self.login_email_container)
+        self.login_email_label.setObjectName(u"login_email_label")
+        self.login_email_label.setFont(font)
 
-        self.verticalLayout_28.addWidget(self.username_label)
+        self.verticalLayout_28.addWidget(self.login_email_label)
 
-        self.username_input = QLineEdit(self.username_container)
-        self.username_input.setObjectName(u"username_input")
+        self.login_email_input = QLineEdit(self.login_email_container)
+        self.login_email_input.setObjectName(u"login_email_input")
 
-        self.verticalLayout_28.addWidget(self.username_input)
+        self.verticalLayout_28.addWidget(self.login_email_input)
 
 
-        self.verticalLayout_27.addWidget(self.username_container)
+        self.verticalLayout_27.addWidget(self.login_email_container)
 
-        self.widget = QWidget(self.login_form_container)
-        self.widget.setObjectName(u"widget")
-        sizePolicy2.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
-        self.widget.setSizePolicy(sizePolicy2)
-        self.verticalLayout_29 = QVBoxLayout(self.widget)
+        self.login_password_container = QWidget(self.login_form_container)
+        self.login_password_container.setObjectName(u"login_password_container")
+        sizePolicy2.setHeightForWidth(self.login_password_container.sizePolicy().hasHeightForWidth())
+        self.login_password_container.setSizePolicy(sizePolicy2)
+        self.verticalLayout_29 = QVBoxLayout(self.login_password_container)
         self.verticalLayout_29.setObjectName(u"verticalLayout_29")
-        self.username_label_2 = QLabel(self.widget)
-        self.username_label_2.setObjectName(u"username_label_2")
+        self.login_password_label = QLabel(self.login_password_container)
+        self.login_password_label.setObjectName(u"login_password_label")
+        self.login_password_label.setFont(font)
+        self.login_password_label.setCursor(QCursor(Qt.UpArrowCursor))
 
-        self.verticalLayout_29.addWidget(self.username_label_2)
+        self.verticalLayout_29.addWidget(self.login_password_label)
 
-        self.username_input_2 = QLineEdit(self.widget)
-        self.username_input_2.setObjectName(u"username_input_2")
+        self.login_password_input = QLineEdit(self.login_password_container)
+        self.login_password_input.setObjectName(u"login_password_input")
+        self.login_password_input.setEchoMode(QLineEdit.Password)
 
-        self.verticalLayout_29.addWidget(self.username_input_2)
+        self.verticalLayout_29.addWidget(self.login_password_input)
 
 
-        self.verticalLayout_27.addWidget(self.widget)
+        self.verticalLayout_27.addWidget(self.login_password_container)
 
-        self.widget_2 = QWidget(self.login_form_container)
-        self.widget_2.setObjectName(u"widget_2")
-        self.horizontalLayout_8 = QHBoxLayout(self.widget_2)
+        self.remember_container = QWidget(self.login_form_container)
+        self.remember_container.setObjectName(u"remember_container")
+        self.horizontalLayout_8 = QHBoxLayout(self.remember_container)
         self.horizontalLayout_8.setSpacing(10)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.horizontalLayout_8.setContentsMargins(4, 4, 4, 4)
-        self.checkBox = QCheckBox(self.widget_2)
-        self.checkBox.setObjectName(u"checkBox")
+        self.horizontalLayout_8.setContentsMargins(9, 0, 4, 0)
+        self.remember_checkbox = QCheckBox(self.remember_container)
+        self.remember_checkbox.setObjectName(u"remember_checkbox")
         sizePolicy7 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         sizePolicy7.setHorizontalStretch(0)
         sizePolicy7.setVerticalStretch(0)
-        sizePolicy7.setHeightForWidth(self.checkBox.sizePolicy().hasHeightForWidth())
-        self.checkBox.setSizePolicy(sizePolicy7)
-        self.checkBox.setChecked(False)
+        sizePolicy7.setHeightForWidth(self.remember_checkbox.sizePolicy().hasHeightForWidth())
+        self.remember_checkbox.setSizePolicy(sizePolicy7)
+        self.remember_checkbox.setChecked(False)
 
-        self.horizontalLayout_8.addWidget(self.checkBox)
+        self.horizontalLayout_8.addWidget(self.remember_checkbox)
 
-        self.label = QLabel(self.widget_2)
-        self.label.setObjectName(u"label")
+        self.remember_label = QLabel(self.remember_container)
+        self.remember_label.setObjectName(u"remember_label")
+        self.remember_label.setFont(font)
 
-        self.horizontalLayout_8.addWidget(self.label)
+        self.horizontalLayout_8.addWidget(self.remember_label)
 
 
-        self.verticalLayout_27.addWidget(self.widget_2)
+        self.verticalLayout_27.addWidget(self.remember_container)
 
         self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout_27.addItem(self.verticalSpacer_7)
 
-        self.pushButton = QPushButton(self.login_form_container)
-        self.pushButton.setObjectName(u"pushButton")
+        self.login_button = QPushButton(self.login_form_container)
+        self.login_button.setObjectName(u"login_button")
+        self.login_button.setMinimumSize(QSize(0, 40))
+        self.login_button.setCursor(QCursor(Qt.PointingHandCursor))
+        self.login_button.setFocusPolicy(Qt.TabFocus)
 
-        self.verticalLayout_27.addWidget(self.pushButton)
+        self.verticalLayout_27.addWidget(self.login_button)
 
-        self.sign_up_label = QLabel(self.login_form_container)
+        self.sign_up_container = QWidget(self.login_form_container)
+        self.sign_up_container.setObjectName(u"sign_up_container")
+        self.horizontalLayout_11 = QHBoxLayout(self.sign_up_container)
+        self.horizontalLayout_11.setSpacing(0)
+        self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
+        self.horizontalLayout_11.setContentsMargins(0, 0, 4, 4)
+        self.sign_up_label = QLabel(self.sign_up_container)
         self.sign_up_label.setObjectName(u"sign_up_label")
         self.sign_up_label.setMinimumSize(QSize(0, 30))
         self.sign_up_label.setMaximumSize(QSize(16777215, 16777215))
+        self.sign_up_label.setFont(font)
+        self.sign_up_label.setLineWidth(1)
         self.sign_up_label.setAlignment(Qt.AlignCenter)
+        self.sign_up_label.setMargin(0)
+        self.sign_up_label.setIndent(-1)
 
-        self.verticalLayout_27.addWidget(self.sign_up_label)
+        self.horizontalLayout_11.addWidget(self.sign_up_label)
+
+        self.sign_up_button = QPushButton(self.sign_up_container)
+        self.sign_up_button.setObjectName(u"sign_up_button")
+        font8 = QFont()
+        font8.setKerning(False)
+        self.sign_up_button.setFont(font8)
+        self.sign_up_button.setCursor(QCursor(Qt.PointingHandCursor))
+        self.sign_up_button.setCheckable(False)
+
+        self.horizontalLayout_11.addWidget(self.sign_up_button)
 
 
-        self.verticalLayout_26.addWidget(self.login_content)
+        self.verticalLayout_27.addWidget(self.sign_up_container)
+
+
+        self.gridLayout_4.addWidget(self.login_form_container, 0, 0, 1, 1)
+
+
+        self.gridLayout_6.addWidget(self.login_content, 0, 0, 1, 1)
 
         self.stackedWidget.addWidget(self.login_page)
+        self.register_page = QWidget()
+        self.register_page.setObjectName(u"register_page")
+        self.gridLayout_8 = QGridLayout(self.register_page)
+        self.gridLayout_8.setSpacing(0)
+        self.gridLayout_8.setObjectName(u"gridLayout_8")
+        self.gridLayout_8.setContentsMargins(0, 0, 0, 0)
+        self.register_content = QWidget(self.register_page)
+        self.register_content.setObjectName(u"register_content")
+        self.gridLayout_7 = QGridLayout(self.register_content)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.register_form_container = QWidget(self.register_content)
+        self.register_form_container.setObjectName(u"register_form_container")
+        sizePolicy6.setHeightForWidth(self.register_form_container.sizePolicy().hasHeightForWidth())
+        self.register_form_container.setSizePolicy(sizePolicy6)
+        self.verticalLayout_33 = QVBoxLayout(self.register_form_container)
+        self.verticalLayout_33.setSpacing(6)
+        self.verticalLayout_33.setObjectName(u"verticalLayout_33")
+        self.register_page_label = QLabel(self.register_form_container)
+        self.register_page_label.setObjectName(u"register_page_label")
+        self.register_page_label.setFont(font7)
+        self.register_page_label.setAlignment(Qt.AlignCenter)
+        self.register_page_label.setMargin(4)
+
+        self.verticalLayout_33.addWidget(self.register_page_label)
+
+        self.register_email_container = QWidget(self.register_form_container)
+        self.register_email_container.setObjectName(u"register_email_container")
+        sizePolicy2.setHeightForWidth(self.register_email_container.sizePolicy().hasHeightForWidth())
+        self.register_email_container.setSizePolicy(sizePolicy2)
+        self.verticalLayout_34 = QVBoxLayout(self.register_email_container)
+        self.verticalLayout_34.setObjectName(u"verticalLayout_34")
+        self.register_email_label = QLabel(self.register_email_container)
+        self.register_email_label.setObjectName(u"register_email_label")
+        self.register_email_label.setFont(font)
+
+        self.verticalLayout_34.addWidget(self.register_email_label)
+
+        self.register_email_input = QLineEdit(self.register_email_container)
+        self.register_email_input.setObjectName(u"register_email_input")
+
+        self.verticalLayout_34.addWidget(self.register_email_input)
+
+
+        self.verticalLayout_33.addWidget(self.register_email_container)
+
+        self.display_name_container = QWidget(self.register_form_container)
+        self.display_name_container.setObjectName(u"display_name_container")
+        sizePolicy2.setHeightForWidth(self.display_name_container.sizePolicy().hasHeightForWidth())
+        self.display_name_container.setSizePolicy(sizePolicy2)
+        self.verticalLayout_35 = QVBoxLayout(self.display_name_container)
+        self.verticalLayout_35.setObjectName(u"verticalLayout_35")
+        self.display_name_label = QLabel(self.display_name_container)
+        self.display_name_label.setObjectName(u"display_name_label")
+        self.display_name_label.setFont(font)
+        self.display_name_label.setCursor(QCursor(Qt.UpArrowCursor))
+
+        self.verticalLayout_35.addWidget(self.display_name_label)
+
+        self.display_name_input = QLineEdit(self.display_name_container)
+        self.display_name_input.setObjectName(u"display_name_input")
+
+        self.verticalLayout_35.addWidget(self.display_name_input)
+
+
+        self.verticalLayout_33.addWidget(self.display_name_container)
+
+        self.register_password_container = QWidget(self.register_form_container)
+        self.register_password_container.setObjectName(u"register_password_container")
+        sizePolicy2.setHeightForWidth(self.register_password_container.sizePolicy().hasHeightForWidth())
+        self.register_password_container.setSizePolicy(sizePolicy2)
+        self.verticalLayout_36 = QVBoxLayout(self.register_password_container)
+        self.verticalLayout_36.setObjectName(u"verticalLayout_36")
+        self.register_password_label = QLabel(self.register_password_container)
+        self.register_password_label.setObjectName(u"register_password_label")
+        self.register_password_label.setFont(font)
+        self.register_password_label.setCursor(QCursor(Qt.UpArrowCursor))
+
+        self.verticalLayout_36.addWidget(self.register_password_label)
+
+        self.register_password_input = QLineEdit(self.register_password_container)
+        self.register_password_input.setObjectName(u"register_password_input")
+
+        self.verticalLayout_36.addWidget(self.register_password_input)
+
+
+        self.verticalLayout_33.addWidget(self.register_password_container)
+
+        self.verticalSpacer_9 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_33.addItem(self.verticalSpacer_9)
+
+        self.register_button = QPushButton(self.register_form_container)
+        self.register_button.setObjectName(u"register_button")
+        self.register_button.setMinimumSize(QSize(0, 40))
+        self.register_button.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.verticalLayout_33.addWidget(self.register_button)
+
+        self.sign_in_container = QWidget(self.register_form_container)
+        self.sign_in_container.setObjectName(u"sign_in_container")
+        self.horizontalLayout_13 = QHBoxLayout(self.sign_in_container)
+        self.horizontalLayout_13.setSpacing(5)
+        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
+        self.horizontalLayout_13.setContentsMargins(9, 0, 4, 4)
+        self.sign_in_label = QLabel(self.sign_in_container)
+        self.sign_in_label.setObjectName(u"sign_in_label")
+        self.sign_in_label.setMinimumSize(QSize(0, 30))
+        self.sign_in_label.setMaximumSize(QSize(16777215, 16777215))
+        self.sign_in_label.setFont(font)
+        self.sign_in_label.setLineWidth(1)
+        self.sign_in_label.setAlignment(Qt.AlignCenter)
+        self.sign_in_label.setMargin(0)
+        self.sign_in_label.setIndent(-1)
+
+        self.horizontalLayout_13.addWidget(self.sign_in_label)
+
+        self.sign_in_button = QPushButton(self.sign_in_container)
+        self.sign_in_button.setObjectName(u"sign_in_button")
+        self.sign_in_button.setFont(font8)
+        self.sign_in_button.setCursor(QCursor(Qt.PointingHandCursor))
+        self.sign_in_button.setCheckable(False)
+
+        self.horizontalLayout_13.addWidget(self.sign_in_button)
+
+
+        self.verticalLayout_33.addWidget(self.sign_in_container)
+
+
+        self.gridLayout_7.addWidget(self.register_form_container, 0, 0, 1, 1)
+
+
+        self.gridLayout_8.addWidget(self.register_content, 0, 0, 1, 1)
+
+        self.stackedWidget.addWidget(self.register_page)
+        self.player_page = QWidget()
+        self.player_page.setObjectName(u"player_page")
+        self.horizontalLayout = QHBoxLayout(self.player_page)
+        self.horizontalLayout.setSpacing(0)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.player_page_contents = QWidget(self.player_page)
+        self.player_page_contents.setObjectName(u"player_page_contents")
+        self.verticalLayout_22 = QVBoxLayout(self.player_page_contents)
+        self.verticalLayout_22.setObjectName(u"verticalLayout_22")
+        self.player_page_header = QWidget(self.player_page_contents)
+        self.player_page_header.setObjectName(u"player_page_header")
+        self.horizontalLayout_9 = QHBoxLayout(self.player_page_header)
+        self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
+        self.minimize_page_button = QToolButton(self.player_page_header)
+        self.minimize_page_button.setObjectName(u"minimize_page_button")
+        self.minimize_page_button.setCursor(QCursor(Qt.PointingHandCursor))
+        icon12 = QIcon()
+        icon12.addFile(u":/resources/assets/images/go_back.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.minimize_page_button.setIcon(icon12)
+        self.minimize_page_button.setIconSize(QSize(32, 32))
+
+        self.horizontalLayout_9.addWidget(self.minimize_page_button)
+
+        self.playlist_label = QLabel(self.player_page_header)
+        self.playlist_label.setObjectName(u"playlist_label")
+        sizePolicy2.setHeightForWidth(self.playlist_label.sizePolicy().hasHeightForWidth())
+        self.playlist_label.setSizePolicy(sizePolicy2)
+        self.playlist_label.setFont(font1)
+        self.playlist_label.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_9.addWidget(self.playlist_label)
+
+        self.share_button = QToolButton(self.player_page_header)
+        self.share_button.setObjectName(u"share_button")
+        self.share_button.setCursor(QCursor(Qt.PointingHandCursor))
+        icon13 = QIcon()
+        icon13.addFile(u":/resources/assets/images/share.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.share_button.setIcon(icon13)
+        self.share_button.setIconSize(QSize(32, 32))
+
+        self.horizontalLayout_9.addWidget(self.share_button)
+
+
+        self.verticalLayout_22.addWidget(self.player_page_header)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_22.addItem(self.verticalSpacer)
+
+        self.player_content = QWidget(self.player_page_contents)
+        self.player_content.setObjectName(u"player_content")
+        self.horizontalLayout_10 = QHBoxLayout(self.player_content)
+        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
+        self.player_thumbnail = QLabel(self.player_content)
+        self.player_thumbnail.setObjectName(u"player_thumbnail")
+        sizePolicy8 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        sizePolicy8.setHorizontalStretch(0)
+        sizePolicy8.setVerticalStretch(0)
+        sizePolicy8.setHeightForWidth(self.player_thumbnail.sizePolicy().hasHeightForWidth())
+        self.player_thumbnail.setSizePolicy(sizePolicy8)
+        self.player_thumbnail.setMinimumSize(QSize(350, 350))
+
+        self.horizontalLayout_10.addWidget(self.player_thumbnail)
+
+        self.player_container = QWidget(self.player_content)
+        self.player_container.setObjectName(u"player_container")
+        sizePolicy4.setHeightForWidth(self.player_container.sizePolicy().hasHeightForWidth())
+        self.player_container.setSizePolicy(sizePolicy4)
+        self.verticalLayout_32 = QVBoxLayout(self.player_container)
+        self.verticalLayout_32.setObjectName(u"verticalLayout_32")
+        self.player_page_song_label = QLabel(self.player_container)
+        self.player_page_song_label.setObjectName(u"player_page_song_label")
+        self.player_page_song_label.setFont(font1)
+
+        self.verticalLayout_32.addWidget(self.player_page_song_label)
+
+        self.player_page_artist_label = QLabel(self.player_container)
+        self.player_page_artist_label.setObjectName(u"player_page_artist_label")
+        self.player_page_artist_label.setFont(font2)
+
+        self.verticalLayout_32.addWidget(self.player_page_artist_label)
+
+        self.player_page_slider = QSlider(self.player_container)
+        self.player_page_slider.setObjectName(u"player_page_slider")
+        self.player_page_slider.setOrientation(Qt.Horizontal)
+
+        self.verticalLayout_32.addWidget(self.player_page_slider)
+
+        self.player_duration_container = QWidget(self.player_container)
+        self.player_duration_container.setObjectName(u"player_duration_container")
+        self.horizontalLayout_12 = QHBoxLayout(self.player_duration_container)
+        self.horizontalLayout_12.setSpacing(0)
+        self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
+        self.horizontalLayout_12.setContentsMargins(0, 0, 0, 0)
+        self.player_page_startdur_label = QLabel(self.player_duration_container)
+        self.player_page_startdur_label.setObjectName(u"player_page_startdur_label")
+        self.player_page_startdur_label.setFont(font2)
+
+        self.horizontalLayout_12.addWidget(self.player_page_startdur_label)
+
+        self.player_page_enddur_label = QLabel(self.player_duration_container)
+        self.player_page_enddur_label.setObjectName(u"player_page_enddur_label")
+        self.player_page_enddur_label.setFont(font3)
+        self.player_page_enddur_label.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.horizontalLayout_12.addWidget(self.player_page_enddur_label)
+
+
+        self.verticalLayout_32.addWidget(self.player_duration_container)
+
+        self.player_buttons = QWidget(self.player_container)
+        self.player_buttons.setObjectName(u"player_buttons")
+        self.horizontalLayout_17 = QHBoxLayout(self.player_buttons)
+        self.horizontalLayout_17.setSpacing(0)
+        self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
+        self.shuffle_button = QToolButton(self.player_buttons)
+        self.shuffle_button.setObjectName(u"shuffle_button")
+        self.shuffle_button.setIcon(icon10)
+        self.shuffle_button.setIconSize(QSize(24, 24))
+        self.shuffle_button.setCheckable(True)
+
+        self.horizontalLayout_17.addWidget(self.shuffle_button)
+
+        self.previous_button = QToolButton(self.player_buttons)
+        self.previous_button.setObjectName(u"previous_button")
+        self.previous_button.setIcon(icon6)
+        self.previous_button.setIconSize(QSize(24, 24))
+
+        self.horizontalLayout_17.addWidget(self.previous_button)
+
+        self.play_pause_button = QToolButton(self.player_buttons)
+        self.play_pause_button.setObjectName(u"play_pause_button")
+        icon14 = QIcon()
+        icon14.addFile(u":/resources/assets/images/play.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.play_pause_button.setIcon(icon14)
+        self.play_pause_button.setIconSize(QSize(24, 24))
+
+        self.horizontalLayout_17.addWidget(self.play_pause_button)
+
+        self.next_button = QToolButton(self.player_buttons)
+        self.next_button.setObjectName(u"next_button")
+        self.next_button.setIcon(icon4)
+        self.next_button.setIconSize(QSize(24, 24))
+
+        self.horizontalLayout_17.addWidget(self.next_button)
+
+        self.loop_button = QToolButton(self.player_buttons)
+        self.loop_button.setObjectName(u"loop_button")
+        icon15 = QIcon()
+        icon15.addFile(u":/resources/assets/images/loop.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.loop_button.setIcon(icon15)
+        self.loop_button.setIconSize(QSize(24, 24))
+
+        self.horizontalLayout_17.addWidget(self.loop_button)
+
+
+        self.verticalLayout_32.addWidget(self.player_buttons)
+
+
+        self.horizontalLayout_10.addWidget(self.player_container)
+
+
+        self.verticalLayout_22.addWidget(self.player_content)
+
+        self.verticalSpacer_8 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_22.addItem(self.verticalSpacer_8)
+
+
+        self.horizontalLayout.addWidget(self.player_page_contents)
+
+        self.stackedWidget.addWidget(self.player_page)
 
         self.gridLayout_5.addWidget(self.stackedWidget, 0, 0, 1, 1)
 
@@ -890,7 +1587,7 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.setCurrentIndex(0)
         self.home_button.setDefault(False)
-        self.pages_widget.setCurrentIndex(0)
+        self.pages_widget.setCurrentIndex(3)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -930,11 +1627,52 @@ class Ui_MainWindow(object):
         self.playlist_shuffle_button.setText("")
         self.playlist_play_button.setText("")
         self.playlist_no_songs_label.setText(QCoreApplication.translate("MainWindow", u"This playlist has no songs.", None))
-        self.username_label.setText(QCoreApplication.translate("MainWindow", u"Username", None))
-        self.username_label_2.setText(QCoreApplication.translate("MainWindow", u"Password", None))
-        self.checkBox.setText("")
-        self.label.setText(QCoreApplication.translate("MainWindow", u"Remember me", None))
-        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Login", None))
-        self.sign_up_label.setText(QCoreApplication.translate("MainWindow", u"Don't have an account? Click here to sign up", None))
+        self.settings_theme_page_label_2.setText(QCoreApplication.translate("MainWindow", u"About", None))
+        self.about_us_label.setText(QCoreApplication.translate("MainWindow", u"About Music Streaming Service", None))
+        self.about_us_2.setText(QCoreApplication.translate("MainWindow", u"Music Streaming Service is a project developed as part of the 01286232 Software Engineering Principles course in the second semester of the second year of the Software Engineering program at King Mongkut's Institute of Technology Ladkrabang.", None))
+        self.team_member_label.setText(QCoreApplication.translate("MainWindow", u"Team Members", None))
+        self.member.setText(QCoreApplication.translate("MainWindow", u"65011466    Phyo Thi Khaing", None))
+        self.member_2.setText(QCoreApplication.translate("MainWindow", u"65011514    Salinporn Rattanaprapaporn", None))
+        self.member_3.setText(QCoreApplication.translate("MainWindow", u"65011527    Sirapob    Sriviriyahphaiboon", None))
+        self.setting_language_page_label.setText(QCoreApplication.translate("MainWindow", u"Languages", None))
+        self.apply_language_button.setText(QCoreApplication.translate("MainWindow", u"Apply", None))
+        self.language_label.setText(QCoreApplication.translate("MainWindow", u"Choose Your Language", None))
+        self.language_comboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"English (US)", None))
+        self.language_comboBox.setItemText(1, QCoreApplication.translate("MainWindow", u"Thai", None))
+
+        self.settings_theme_page_label.setText(QCoreApplication.translate("MainWindow", u"Theme", None))
+        self.apply_theme_button.setText(QCoreApplication.translate("MainWindow", u"Apply", None))
+        self.current_theme_label.setText(QCoreApplication.translate("MainWindow", u"Theme Options", None))
+        self.theme_comboBox_.setItemText(0, QCoreApplication.translate("MainWindow", u"Default", None))
+
+        self.theme_preview_label.setText(QCoreApplication.translate("MainWindow", u"Preview", None))
+        self.login_page_label.setText(QCoreApplication.translate("MainWindow", u"Log In", None))
+        self.login_email_label.setText(QCoreApplication.translate("MainWindow", u"Email", None))
+        self.login_password_label.setText(QCoreApplication.translate("MainWindow", u"Password", None))
+        self.remember_checkbox.setText("")
+        self.remember_label.setText(QCoreApplication.translate("MainWindow", u"Remember me", None))
+        self.login_button.setText(QCoreApplication.translate("MainWindow", u"Log In", None))
+        self.sign_up_label.setText(QCoreApplication.translate("MainWindow", u"Don't have an account?", None))
+        self.sign_up_button.setText(QCoreApplication.translate("MainWindow", u"Click here to sign up", None))
+        self.register_page_label.setText(QCoreApplication.translate("MainWindow", u"Create Your Account", None))
+        self.register_email_label.setText(QCoreApplication.translate("MainWindow", u"Email", None))
+        self.display_name_label.setText(QCoreApplication.translate("MainWindow", u"Display Name", None))
+        self.register_password_label.setText(QCoreApplication.translate("MainWindow", u"Password", None))
+        self.register_button.setText(QCoreApplication.translate("MainWindow", u"Sign Up", None))
+        self.sign_in_label.setText(QCoreApplication.translate("MainWindow", u"Already have an account?", None))
+        self.sign_in_button.setText(QCoreApplication.translate("MainWindow", u"Click here to Log in", None))
+        self.minimize_page_button.setText("")
+        self.playlist_label.setText(QCoreApplication.translate("MainWindow", u"Playlist Name", None))
+        self.share_button.setText("")
+        self.player_thumbnail.setText("")
+        self.player_page_song_label.setText(QCoreApplication.translate("MainWindow", u"Song Title", None))
+        self.player_page_artist_label.setText(QCoreApplication.translate("MainWindow", u"Artist Name", None))
+        self.player_page_startdur_label.setText(QCoreApplication.translate("MainWindow", u"0:00", None))
+        self.player_page_enddur_label.setText(QCoreApplication.translate("MainWindow", u"-99:99", None))
+        self.shuffle_button.setText("")
+        self.previous_button.setText("")
+        self.play_pause_button.setText("")
+        self.next_button.setText("")
+        self.loop_button.setText("")
     # retranslateUi
 

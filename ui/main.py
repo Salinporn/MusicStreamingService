@@ -3,37 +3,119 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QVBoxLayout, QGridLayout, QSizePolicy,
     QPushButton, QToolButton,
     QLabel)
-from PySide6.QtGui import (QIcon, QCursor, QPixmap)
-from PySide6.QtCore import (Qt, QSize, QUrl, QTimer)
-from PySide6.QtNetwork import QTcpSocket
+from PySide6.QtGui import (QIcon, QCursor, QMouseEvent, QPixmap)
+from PySide6.QtCore import (
+    Qt, QSize, QUrl,
+    QTimer, Signal, QByteArray,
+    QJsonDocument, QSettings)
+from PySide6.QtNetwork import (
+    QTcpSocket, QNetworkAccessManager,
+    QNetworkRequest, QNetworkReply,
+    QSslConfiguration, QSsl)
 from PySide6.QtMultimedia import (QMediaPlayer, QAudioOutput)
 from ui.main_ui import Ui_MainWindow
 import sys
+from types import FunctionType
 
 from backend.models import Playlist, Song, Category
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    SERVER_URL = "http://localhost/stream-audio"
+    SERVER_URL = "http://localhost/"
     SERVER_PORT = 8000
-    
-    UPDATE_INTERVAL = 100
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
         
         # switching pages
-        self.home_button.clicked.connect(lambda: self.pages_widget.setCurrentIndex(0))
-        self.browse_button.clicked.connect(lambda: self.pages_widget.setCurrentIndex(1))
-        self.library_button.clicked.connect(lambda: self.pages_widget.setCurrentIndex(2))
-        self.profile_button.clicked.connect(lambda: self.pages_widget.setCurrentIndex(3))
+        self.home_button.clicked.connect(lambda: self.pages_widget.setCurrentWidget(self.home_page))
+        self.browse_button.clicked.connect(lambda: self.pages_widget.setCurrentWidget(self.browse_page))
+        self.library_button.clicked.connect(lambda: self.pages_widget.setCurrentWidget(self.library_page))
+        self.profile_button.clicked.connect(lambda: self.pages_widget.setCurrentWidget(self.profile_page))
+        
+        self.sign_in_button.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.login_page))
+        self.sign_up_button.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.register_page))
         
         # setup
+        self.setup_networking()
+        self.setup_login()
         self.setup_home_page()
         self.setup_browse_page()
         self.setup_library_page()
         self.setup_profile_page()
+        self.setup_settings()
         self.setup_player()
         self.setup_playlists()
+
+    # -- networking --
+    def setup_networking(self):
+        self.network_manager = QNetworkAccessManager(self)
+        self.ssl_config = QSslConfiguration()
+        self.ssl_config.setProtocol(QSsl.SslProtocol.TlsV1_2OrLater)
+        
+    def perform_get_request(self, url: str, callback: FunctionType):
+        request_url = QUrl(url)
+        request_url.setPort(self.SERVER_PORT)
+
+        request = QNetworkRequest(request_url)
+        request.setSslConfiguration(self.ssl_config)
+        # request.setHeader(...)
+        self.network_manager.finished.connect(lambda reply: self.handle_response(reply, callback))
+        self.network_manager.get(request)
+        
+    def perform_post_request(self, url: str, data: dict, callback: FunctionType):
+        request_url = QUrl(url)
+        request_url.setPort(self.SERVER_PORT)
+
+        request = QNetworkRequest(request_url)
+        request.setSslConfiguration(self.ssl_config)
+        request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json")
+        
+        # maybe? check for errors and call callback
+        self.network_manager.finished.connect(lambda reply: self.handle_response(reply, callback))
+        
+        # self.network_manager.finished.connect(callback)
+        request_body = QJsonDocument(data).toJson()
+        self.network_manager.post(request, request_body)
+        
+    def handle_response(self, reply: QNetworkReply, callback: FunctionType):
+        err = reply.error()
+        if err == QNetworkReply.NetworkError.NoError:
+            callback(reply)
+        elif err == QNetworkReply.NetworkError.AuthenticationRequiredError:
+            # todo: handle incorrect credentials
+            ...
+        else:
+            print(f"Error: {err}")
+            print(reply.errorString())
+        reply.deleteLater()
+        
+        self.network_manager.finished.disconnect()
+
+    # -- login --
+    LOGIN_ENDPOINT = "client-login"
+    def setup_login(self):
+        self.login_button.clicked.connect(self.handle_login)
+    
+    def handle_login(self):
+        data = {
+            "email": self.login_email_input.text(),
+            "password": self.login_password_input.text(),
+            "remember": self.remember_checkbox.isChecked()
+        }
+        self.perform_post_request(self.SERVER_URL + self.LOGIN_ENDPOINT, data, self.handle_login_response)
+        # self.login_button.setDisabled(True)
+    
+    def handle_login_response(self, reply: QNetworkReply):
+        response_data = reply.readAll()
+        response_json = QJsonDocument.fromJson(response_data).object()
+
+        print(response_json)
+
+        if "session_id" in response_json:
+            # fixme: TEMPORARY FOR LOGIN - HANDLE SESSION ID PROPERLY
+            self.stackedWidget.setCurrentWidget(self.main_page)
+        
+        # self.login_button.setDisabled(False)
 
     # -- home page --
     def setup_home_page(self):
@@ -110,7 +192,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # --TEST--
         self.add_playlist_button.clicked.connect(lambda: self.add_playlist(Playlist("test", "test", "assets/images/1989.jpg")))
 
-    
     def add_playlist(self, playlist: Playlist):
         if len(self.library_playlists) == 0:
             self.no_playlists_label.hide()
@@ -122,14 +203,62 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     # -- profile page --
     def setup_profile_page(self):
-        # todo: change page when clicked
-        self.settings_contents.layout().addWidget(ProfileItem("Languages", parent=self))
-        self.settings_contents.layout().addWidget(ProfileItem("Theme", parent=self))
-        self.settings_contents.layout().addWidget(ProfileItem("Notifications", parent=self))
-        self.settings_contents.layout().addWidget(ProfileItem("About", parent=self))
-        self.settings_contents.layout().addWidget(ProfileItem("Log Out", parent=self))
+        self.settings_contents.layout().addWidget(
+            ProfileItem(
+                text="Languages",
+                parent=self,
+                on_click=lambda: self.open_settings_page(self.settings_language_page)
+            )
+        )
+        self.settings_contents.layout().addWidget(
+            ProfileItem(
+                text="Theme",
+                parent=self,
+                on_click=lambda: self.open_settings_page(self.settings_theme_page)
+            )
+        )
+        self.settings_contents.layout().addWidget(
+            ProfileItem(
+                text="Notifications",
+                parent=self,
+                on_click=lambda: None
+            )
+        ) # TODO: notifications page
+        self.settings_contents.layout().addWidget(
+            ProfileItem(
+                text="About",
+                parent=self,
+                on_click=lambda: self.open_settings_page(self.settings_about_page)
+            )
+        )
+        self.settings_contents.layout().addWidget(
+            ProfileItem(
+                text="Log Out",
+                parent=self,
+                on_click=lambda: None
+            )
+        ) # TODO: handle logging out
+
+    def open_settings_page(self, page: QWidget):
+        self.pages_widget.setCurrentWidget(page)
         
+        back_button = QToolButton(page)
+        back_button.setGeometry(10, 10, 40, 40)
+        back_button.setCursor(QCursor(Qt.PointingHandCursor))
+        back_button.setIcon(QIcon(":resources/assets/images/go_back.png"))
+        back_button.show()
+
+        back_button.clicked.connect(lambda: self.pages_widget.setCurrentWidget(self.profile_page))
+
+    # -- settings
+    def setup_settings(self):
+        # todo: implement settings
+        ...
+    
     # -- player --
+    AUDIO_ENDPOINT = "stream-audio"
+    
+    UPDATE_INTERVAL = 100
     def setup_player(self):
         # set up media player
         self.audio_output = QAudioOutput()
@@ -138,11 +267,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.media_player.setAudioOutput(self.audio_output)
         
         # set audio source
-        self.audio_source_url = QUrl(self.SERVER_URL)
+        self.audio_source_url = QUrl(self.SERVER_URL + self.AUDIO_ENDPOINT)
         self.audio_source_url.setPort(self.SERVER_PORT)
         self.media_player.setSource(self.audio_source_url)
         
-        # player ui
+        # player ui + logic
         self.is_playing = False
         
         self.play_pause_btn.clicked.connect(self.pause_play)
@@ -341,6 +470,8 @@ class LongLabelButton(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.setMinimumHeight(40)
 
+        self.main_window = parent
+
         self.label = QPushButton(text)
         self.label.setMinimumHeight(35)
         self.label.setCursor(QCursor(Qt.PointingHandCursor))
@@ -447,14 +578,15 @@ class LibraryItem(SmallThumbnailItem):
     def __init__(self, text: str, image_path: str, parent=None):
         super().__init__(text, image_path, parent)
         
-        
-
 # -- profile page --
 class ProfileItem(LongLabelButton):
-    def __init__(self, text: str, parent: MainWindow = None) -> None:
+    def __init__(self, text: str, on_click: FunctionType, parent: MainWindow = None) -> None:
         super().__init__(text, parent)
         
         self.tool_button.setIcon(QIcon(":/resources/assets/images/enter.png"))
+        
+        self.label.clicked.connect(on_click)
+        self.tool_button.clicked.connect(on_click)
 
 # -- playlists page --
 class SongItem(QWidget):
