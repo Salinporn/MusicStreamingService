@@ -5,11 +5,12 @@ from PySide6.QtWidgets import (
     QLabel)
 from PySide6.QtGui import (QIcon, QCursor, QMouseEvent, QPixmap)
 from PySide6.QtCore import (
-    Qt, QSize, QUrl,
+    QObject, Qt, QSize, QUrl,
     QTimer, Signal, QByteArray,
-    QJsonDocument, QSettings)
+    QJsonDocument, QSettings, QStandardPaths)
 from PySide6.QtNetwork import (
-    QTcpSocket, QNetworkAccessManager,
+    QNetworkCookieJar, QNetworkCookie,
+    QNetworkAccessManager,
     QNetworkRequest, QNetworkReply,
     QSslConfiguration, QSsl)
 from PySide6.QtMultimedia import (QMediaPlayer, QAudioOutput)
@@ -36,13 +37,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sign_up_button.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.register_page))
         
         # setup
+        self.setup_settings()
         self.setup_networking()
         self.setup_login()
+        self.setup_register()
         self.setup_home_page()
         self.setup_browse_page()
         self.setup_library_page()
         self.setup_profile_page()
-        self.setup_settings()
         self.setup_player()
         self.setup_playlists()
 
@@ -52,6 +54,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ssl_config = QSslConfiguration()
         self.ssl_config.setProtocol(QSsl.SslProtocol.TlsV1_2OrLater)
         
+        self.cookie_jar = QNetworkCookieJar()
+        self.network_manager.setCookieJar(self.cookie_jar)
+                
     def perform_get_request(self, url: str, callback: FunctionType):
         request_url = QUrl(url)
         request_url.setPort(self.SERVER_PORT)
@@ -95,7 +100,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     LOGIN_ENDPOINT = "client-login"
     def setup_login(self):
         self.login_button.clicked.connect(self.handle_login)
-    
+        self.session = None
+
+        # if we have a saved session cookie, use it
+        self.settings.beginGroup("Authentication")
+        
+        loaded_cookies = QNetworkCookie.parseCookies(self.settings.value("session"))
+        
+        self.settings.endGroup()
+
+        if loaded_cookies:
+            self.session = loaded_cookies[0]
+            
+            print(self.session)
+            
+            # todo: check if cookie is expired
+
+            self.stackedWidget.setCurrentWidget(self.main_page)
+
     def handle_login(self):
         data = {
             "email": self.login_email_input.text(),
@@ -103,19 +125,73 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "remember": self.remember_checkbox.isChecked()
         }
         self.perform_post_request(self.SERVER_URL + self.LOGIN_ENDPOINT, data, self.handle_login_response)
-        # self.login_button.setDisabled(True)
+        self.login_button.setDisabled(True)
     
     def handle_login_response(self, reply: QNetworkReply):
+        # response_data = reply.readAll()
+        # response_json = QJsonDocument.fromJson(response_data).object()
+
+        cookies = self.cookie_jar.allCookies()
+
+        session_cookie = None
+        for cookie in cookies:
+            if cookie.name() == "session":
+                session_cookie = cookie
+                break
+
+        if session_cookie:
+            # authenticated successfully
+            
+            self.session = session_cookie
+            
+            # store cookie with persistence
+            self.settings.beginGroup("Authentication")
+            self.settings.setValue("session", cookie.toRawForm())
+            self.settings.endGroup()
+            
+            self.stackedWidget.setCurrentWidget(self.main_page)
+        else:
+            # todo: incorrect credentials??
+            pass
+        
+        self.login_email_input.clear()
+        self.login_password_input.clear()
+        self.remember_checkbox.setChecked(False)
+        
+        self.login_button.setDisabled(False)
+    
+    def logout(self):
+        self.settings.beginGroup("Authentication")
+        self.settings.setValue("session", None)
+        self.settings.endGroup()
+            
+        self.session = None
+        self.stackedWidget.setCurrentWidget(self.login_page)
+    
+    # -- register --
+    REGISTER_ENDPOINT = "client-register"
+    def setup_register(self):
+        self.register_button.clicked.connect(self.handle_register)
+    
+    def handle_register(self):
+        data = {
+            "email": self.register_email_input.text(),
+            "name": self.display_name_input.text(),
+            "password": self.register_password_input.text(),
+            "repassword": self.register_confirm_password_input.text()
+        }
+        self.perform_post_request(self.SERVER_URL + self.REGISTER_ENDPOINT, data, self.handle_register_response)
+        # self.login_button.setDisabled(True)
+    
+    def handle_register_response(self, reply: QNetworkReply):
         response_data = reply.readAll()
         response_json = QJsonDocument.fromJson(response_data).object()
 
         print(response_json)
 
-        if "session_id" in response_json:
-            # fixme: TEMPORARY FOR LOGIN - HANDLE SESSION ID PROPERLY
-            self.stackedWidget.setCurrentWidget(self.main_page)
-        
-        # self.login_button.setDisabled(False)
+        if reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute) == 200:
+            # todo: maybe have a message that says registered successfully?
+            self.stackedWidget.setCurrentWidget(self.login_page)
 
     # -- home page --
     def setup_home_page(self):
@@ -155,6 +231,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.recent_searches = []
         
     def search_query(self, query):
+        # todo: perform search query
         print(f"query: {query}")
         
     def search(self):
@@ -235,9 +312,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ProfileItem(
                 text="Log Out",
                 parent=self,
-                on_click=lambda: None
+                on_click=self.logout
             )
-        ) # TODO: handle logging out
+        )
 
     def open_settings_page(self, page: QWidget):
         self.pages_widget.setCurrentWidget(page)
@@ -252,8 +329,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     # -- settings
     def setup_settings(self):
+        self.settings = QSettings()
+        
         # todo: implement settings
-        ...
     
     # -- player --
     AUDIO_ENDPOINT = "stream-audio"
@@ -650,6 +728,8 @@ def to_time(duration: float):
 
 def run():
     app = QApplication(sys.argv)
+    app.setOrganizationName("KMITL")
+    app.setApplicationName("Music Streaming Client")
 
     window = MainWindow()
     window.show()

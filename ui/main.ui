@@ -198,7 +198,7 @@ QLineEdit {
     <item row="0" column="0">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="main_page">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -471,6 +471,9 @@ QLineEdit {
                   <height>240</height>
                  </size>
                 </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string/>
                 </property>
@@ -677,7 +680,7 @@ QLineEdit {
            <item row="0" column="0">
             <widget class="QStackedWidget" name="pages_widget">
              <property name="currentIndex">
-              <number>3</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="home_page">
               <property name="enabled">
@@ -879,8 +882,8 @@ QLineEdit {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>788</width>
-                    <height>745</height>
+                    <width>232</width>
+                    <height>172</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout">
@@ -1164,8 +1167,8 @@ QLineEdit {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>788</width>
-                    <height>686</height>
+                    <width>163</width>
+                    <height>41</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -1254,8 +1257,8 @@ QLineEdit {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>788</width>
-                    <height>698</height>
+                    <width>186</width>
+                    <height>164</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -1622,8 +1625,8 @@ color: #D0D0D0;</string>
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>772</width>
-                       <height>700</height>
+                       <width>319</width>
+                       <height>406</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_42">
@@ -1948,8 +1951,8 @@ color: #D0D0D0;</string>
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>772</width>
-                       <height>321</height>
+                       <width>231</width>
+                       <height>124</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -2282,7 +2285,7 @@ color: #D0D0D0;</string>
                     <number>1</number>
                    </property>
                    <property name="text">
-                    <string>Don't have an account?</string>
+                    <string>Don't have an account? </string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
@@ -2354,28 +2357,6 @@ color: #D0D0D0;</string>
               </sizepolicy>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_33">
-              <property name="spacing">
-               <number>6</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="register_page_label">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>Create Your Account</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-                <property name="margin">
-                 <number>4</number>
-                </property>
-               </widget>
-              </item>
               <item>
                <widget class="QWidget" name="register_email_container" native="true">
                 <property name="sizePolicy">
@@ -2385,6 +2366,25 @@ color: #D0D0D0;</string>
                  </sizepolicy>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_34">
+                 <item>
+                  <widget class="QLabel" name="register_page_label">
+                   <property name="font">
+                    <font>
+                     <pointsize>-1</pointsize>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Create Your Account</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <property name="margin">
+                    <number>4</number>
+                   </property>
+                  </widget>
+                 </item>
                  <item>
                   <widget class="QLabel" name="register_email_label">
                    <property name="font">
@@ -2458,7 +2458,45 @@ color: #D0D0D0;</string>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="register_password_input"/>
+                  <widget class="QLineEdit" name="register_password_input">
+                   <property name="echoMode">
+                    <enum>QLineEdit::Password</enum>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="register_confirm_password_container" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_38">
+                 <item>
+                  <widget class="QLabel" name="register_confirm_password_label">
+                   <property name="font">
+                    <font>
+                     <pointsize>-1</pointsize>
+                    </font>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>UpArrowCursor</cursorShape>
+                   </property>
+                   <property name="text">
+                    <string>Confirm Password</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="register_confirm_password_input">
+                   <property name="echoMode">
+                    <enum>QLineEdit::Password</enum>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </widget>

@@ -310,6 +310,7 @@ class Ui_MainWindow(object):
         self.thumbnail = QLabel(self.player_widget)
         self.thumbnail.setObjectName(u"thumbnail")
         self.thumbnail.setMinimumSize(QSize(240, 240))
+        self.thumbnail.setCursor(QCursor(Qt.PointingHandCursor))
 
         self.verticalLayout_25.addWidget(self.thumbnail)
 
@@ -531,7 +532,7 @@ class Ui_MainWindow(object):
         self.browse_page_scrollarea.setWidgetResizable(True)
         self.browse_page_scrollearea_contents = QWidget()
         self.browse_page_scrollearea_contents.setObjectName(u"browse_page_scrollearea_contents")
-        self.browse_page_scrollearea_contents.setGeometry(QRect(0, 0, 788, 745))
+        self.browse_page_scrollearea_contents.setGeometry(QRect(0, 0, 232, 172))
         self.gridLayout = QGridLayout(self.browse_page_scrollearea_contents)
         self.gridLayout.setObjectName(u"gridLayout")
         self.search_section = QWidget(self.browse_page_scrollearea_contents)
@@ -665,7 +666,7 @@ class Ui_MainWindow(object):
         self.library_page_scrollarea.setWidgetResizable(True)
         self.library_page_scrollarea_contents = QWidget()
         self.library_page_scrollarea_contents.setObjectName(u"library_page_scrollarea_contents")
-        self.library_page_scrollarea_contents.setGeometry(QRect(0, 0, 788, 686))
+        self.library_page_scrollarea_contents.setGeometry(QRect(0, 0, 163, 41))
         self.verticalLayout_13 = QVBoxLayout(self.library_page_scrollarea_contents)
         self.verticalLayout_13.setObjectName(u"verticalLayout_13")
         self.library_contents = QWidget(self.library_page_scrollarea_contents)
@@ -715,7 +716,7 @@ class Ui_MainWindow(object):
         self.profile_page_scrollarea.setWidgetResizable(True)
         self.profile_page_scrollarea_contents = QWidget()
         self.profile_page_scrollarea_contents.setObjectName(u"profile_page_scrollarea_contents")
-        self.profile_page_scrollarea_contents.setGeometry(QRect(0, 0, 788, 698))
+        self.profile_page_scrollarea_contents.setGeometry(QRect(0, 0, 186, 164))
         self.verticalLayout_15 = QVBoxLayout(self.profile_page_scrollarea_contents)
         self.verticalLayout_15.setSpacing(12)
         self.verticalLayout_15.setObjectName(u"verticalLayout_15")
@@ -892,7 +893,7 @@ class Ui_MainWindow(object):
         self.about_page_scrollArea.setWidgetResizable(True)
         self.about_content = QWidget()
         self.about_content.setObjectName(u"about_content")
-        self.about_content.setGeometry(QRect(0, 0, 772, 700))
+        self.about_content.setGeometry(QRect(0, 0, 319, 406))
         self.verticalLayout_42 = QVBoxLayout(self.about_content)
         self.verticalLayout_42.setObjectName(u"verticalLayout_42")
         self.about_us_label = QLabel(self.about_content)
@@ -1064,7 +1065,7 @@ class Ui_MainWindow(object):
         self.theme_scrollArea.setWidgetResizable(True)
         self.settings_theme_widget = QWidget()
         self.settings_theme_widget.setObjectName(u"settings_theme_widget")
-        self.settings_theme_widget.setGeometry(QRect(0, 0, 772, 321))
+        self.settings_theme_widget.setGeometry(QRect(0, 0, 231, 124))
         self.verticalLayout_39 = QVBoxLayout(self.settings_theme_widget)
         self.verticalLayout_39.setObjectName(u"verticalLayout_39")
         self.settings_theme_content_2 = QWidget(self.settings_theme_widget)
@@ -1286,22 +1287,21 @@ class Ui_MainWindow(object):
         sizePolicy6.setHeightForWidth(self.register_form_container.sizePolicy().hasHeightForWidth())
         self.register_form_container.setSizePolicy(sizePolicy6)
         self.verticalLayout_33 = QVBoxLayout(self.register_form_container)
-        self.verticalLayout_33.setSpacing(6)
         self.verticalLayout_33.setObjectName(u"verticalLayout_33")
-        self.register_page_label = QLabel(self.register_form_container)
-        self.register_page_label.setObjectName(u"register_page_label")
-        self.register_page_label.setFont(font7)
-        self.register_page_label.setAlignment(Qt.AlignCenter)
-        self.register_page_label.setMargin(4)
-
-        self.verticalLayout_33.addWidget(self.register_page_label)
-
         self.register_email_container = QWidget(self.register_form_container)
         self.register_email_container.setObjectName(u"register_email_container")
         sizePolicy2.setHeightForWidth(self.register_email_container.sizePolicy().hasHeightForWidth())
         self.register_email_container.setSizePolicy(sizePolicy2)
         self.verticalLayout_34 = QVBoxLayout(self.register_email_container)
         self.verticalLayout_34.setObjectName(u"verticalLayout_34")
+        self.register_page_label = QLabel(self.register_email_container)
+        self.register_page_label.setObjectName(u"register_page_label")
+        self.register_page_label.setFont(font7)
+        self.register_page_label.setAlignment(Qt.AlignCenter)
+        self.register_page_label.setMargin(4)
+
+        self.verticalLayout_34.addWidget(self.register_page_label)
+
         self.register_email_label = QLabel(self.register_email_container)
         self.register_email_label.setObjectName(u"register_email_label")
         self.register_email_label.setFont(font)
@@ -1352,11 +1352,34 @@ class Ui_MainWindow(object):
 
         self.register_password_input = QLineEdit(self.register_password_container)
         self.register_password_input.setObjectName(u"register_password_input")
+        self.register_password_input.setEchoMode(QLineEdit.Password)
 
         self.verticalLayout_36.addWidget(self.register_password_input)
 
 
         self.verticalLayout_33.addWidget(self.register_password_container)
+
+        self.register_confirm_password_container = QWidget(self.register_form_container)
+        self.register_confirm_password_container.setObjectName(u"register_confirm_password_container")
+        sizePolicy2.setHeightForWidth(self.register_confirm_password_container.sizePolicy().hasHeightForWidth())
+        self.register_confirm_password_container.setSizePolicy(sizePolicy2)
+        self.verticalLayout_38 = QVBoxLayout(self.register_confirm_password_container)
+        self.verticalLayout_38.setObjectName(u"verticalLayout_38")
+        self.register_confirm_password_label = QLabel(self.register_confirm_password_container)
+        self.register_confirm_password_label.setObjectName(u"register_confirm_password_label")
+        self.register_confirm_password_label.setFont(font)
+        self.register_confirm_password_label.setCursor(QCursor(Qt.UpArrowCursor))
+
+        self.verticalLayout_38.addWidget(self.register_confirm_password_label)
+
+        self.register_confirm_password_input = QLineEdit(self.register_confirm_password_container)
+        self.register_confirm_password_input.setObjectName(u"register_confirm_password_input")
+        self.register_confirm_password_input.setEchoMode(QLineEdit.Password)
+
+        self.verticalLayout_38.addWidget(self.register_confirm_password_input)
+
+
+        self.verticalLayout_33.addWidget(self.register_confirm_password_container)
 
         self.verticalSpacer_9 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -1585,9 +1608,9 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         self.home_button.setDefault(False)
-        self.pages_widget.setCurrentIndex(3)
+        self.pages_widget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1652,12 +1675,13 @@ class Ui_MainWindow(object):
         self.remember_checkbox.setText("")
         self.remember_label.setText(QCoreApplication.translate("MainWindow", u"Remember me", None))
         self.login_button.setText(QCoreApplication.translate("MainWindow", u"Log In", None))
-        self.sign_up_label.setText(QCoreApplication.translate("MainWindow", u"Don't have an account?", None))
+        self.sign_up_label.setText(QCoreApplication.translate("MainWindow", u"Don't have an account? ", None))
         self.sign_up_button.setText(QCoreApplication.translate("MainWindow", u"Click here to sign up", None))
         self.register_page_label.setText(QCoreApplication.translate("MainWindow", u"Create Your Account", None))
         self.register_email_label.setText(QCoreApplication.translate("MainWindow", u"Email", None))
         self.display_name_label.setText(QCoreApplication.translate("MainWindow", u"Display Name", None))
         self.register_password_label.setText(QCoreApplication.translate("MainWindow", u"Password", None))
+        self.register_confirm_password_label.setText(QCoreApplication.translate("MainWindow", u"Confirm Password", None))
         self.register_button.setText(QCoreApplication.translate("MainWindow", u"Sign Up", None))
         self.sign_in_label.setText(QCoreApplication.translate("MainWindow", u"Already have an account?", None))
         self.sign_in_button.setText(QCoreApplication.translate("MainWindow", u"Click here to Log in", None))
