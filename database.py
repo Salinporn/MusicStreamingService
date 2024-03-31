@@ -3,7 +3,7 @@ import zc.lockfile
 from BTrees._OOBTree import BTree
 import os
 import transaction
-from models import User
+from models import User, Song, Artist, Album, Genre
 import uuid
 from werkzeug.security import generate_password_hash
 import datetime
@@ -93,8 +93,170 @@ class UserManager(Manager):
         
         return True
 
+class MusicManager(Manager):
+    def __init__(self, root):
+        super().__init__(root)
+        self.songs = self.root["songs"]
+        self.artists = self.root["artists"]
+        self.albums = self.root["albums"]
+        self.genres = self.root["genres"]
+        
+    def create_new_song(self, song_title: str, genres: list[str], artists: list[str]):
+        song_uuid = str(uuid.uuid4())
+        if self.songs.get(song_uuid):
+            return None
+        
+        genre_list = [self.genres[g] for g in genres]
+        artist_list = [self.artists[a] for a in artists]
+        
+        song = Song(song_uuid, song_title, genre_list, artist_list)
+
+        for g in genres:
+            self.genres[g].add_song(self)
+            
+        for a in artists:
+            self.artists[a].add_song(self)
+
+        self.songs[song_uuid] = song
+        return song
+
+    def get_song_from_uuid(self, uuid) -> Song:
+        return self.songs.get(uuid)
+    
+    def get_songs(self) -> list[Song]:
+        return [val for val in self.songs.values()]
+    
+    def delete_song_from_uuid(self, uuid):
+        if uuid in self.songs:
+            # just in case
+            # self.delete_song_file(uuid)
+            
+            for a in self.artists:
+                self.artists[a].delete_song(self)
+            
+            del self.songs[uuid]
+            return True
+        else:
+            return False
+    
+    def edit_song(self, uuid, title, genres, artists):
+        if uuid not in self.songs:
+            return False
+        
+        self.songs[uuid].edit(title, genres, artists)
+        
+        return True
+    
+    def create_new_artist(self, name):
+        artist_uuid = str(uuid.uuid4())
+        if self.artists.get(artist_uuid):
+            return None
+        
+        artist = Artist(artist_uuid, name)
+
+        self.artists[artist_uuid] = artist
+        return artist
+
+    def get_artist_from_uuid(self, uuid) -> Artist:
+        return self.artists.get(uuid)
+
+    def get_artists(self) -> list[Artist]:
+        return [val for val in self.artists.values()]
+
+    def delete_artist_from_uuid(self, uuid):
+        if uuid in self.artists:
+            for a in self.artists[uuid].get_albums():
+                a.delete_artist(self.artists[uuid])
+            
+            for s in self.artists[uuid].get_songs():
+                s.delete_artist(self.artists[uuid])
+                
+            del self.artists[uuid]
+            return True
+        else:
+            return False
+    
+    def edit_artist(self, uuid, name):
+        if uuid not in self.artists:
+            return False
+        
+        self.artists[uuid].edit(name)
+        
+        return True
+
+    def create_new_album(self, album_title: str, artists: list[str], songs: list[str]):
+        album_uuid = str(uuid.uuid4())
+
+        if self.albums.get(album_uuid):
+            return None
+        
+        artist_list = [self.artists[a] for a in artists]
+        song_list = [self.songs[s] for s in songs] 
+        album = Album(album_uuid, album_title, artist_list, song_list)
+        for a in artists:
+            self.artists[a].add_album(album)
+            
+        for s in songs:
+            self.songs[s].set_album(album)
+
+        self.albums[album_uuid] = album
+        return album
+    
+    def get_album_from_uuid(self, uuid) -> Album:
+        return self.albums.get(uuid)
+
+    def get_albums(self) -> list[Album]:
+        return [val for val in self.albums.values()]
+
+    def delete_album_from_uuid(self, uuid):
+        if uuid not in self.albums:
+            return False
+        
+        del self.albums[uuid]
+        return True
+    
+    def edit_album(self, uuid, title, artists, song):
+        if uuid not in self.albums:
+            return False
+        
+        self.albums[uuid].edit(title, artists, song)
+        return True
+    
+    def create_new_genre(self, genre_name):
+        genre_uuid = str(uuid.uuid4())
+        
+        if self.genres.get(genre_uuid):
+            return None
+        
+        genre = Genre(genre_uuid, genre_name)
+
+        self.genres[genre_uuid] = genre
+        
+        return genre
+    
+    def get_genre_from_uuid(self, uuid) -> Genre:
+        return self.genres.get(uuid)
+
+    def get_genres(self) -> list[Genre]:
+        return [val for val in self.genres.values()]
+    
+    def delete_genre_from_uuid(self, uuid) -> bool:
+        if uuid in self.genres:
+            del self.genres[uuid]
+            return True
+        else:
+            return False
+            
+    def edit_genre(self, old_uuid, genre_name) -> bool:
+        if old_uuid not in self.genres:
+            return False
+        
+        self.genres[old_uuid].edit(genre_name)
+        
+        return True
+
 class DBManager:
-    INITIAL = ["users", "sessions"]
+    INITIAL = ["users", "songs", "artists", "albums", "genres", "sessions"]
     CONFIG_PATH = "./config.xml"
     
     def __init__(self):

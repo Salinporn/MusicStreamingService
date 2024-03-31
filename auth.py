@@ -40,7 +40,7 @@ def current_user(request: Request, user=Depends(login_manager.optional)):
     return user
 
 @login_manager.user_loader()
-def dashboard_load_user(email) -> User:
+def load_user(email) -> User:
     return user_manager.get_user_from_email(email)
 
 @auth.get("/login", response_class=HTMLResponse)
@@ -51,7 +51,7 @@ def login(request: Request):
 async def handle_dashboard_login(request: Request, email: str = Form(...), password: str = Form(...), remember: bool = Form(False)):
     email = email.lower()
     
-    user = dashboard_load_user(email)
+    user = load_user(email)
 
     # check if user exists and password is correct
     if not user or not check_password_hash(user.get_password_hash(), password):
@@ -63,7 +63,7 @@ async def handle_dashboard_login(request: Request, email: str = Form(...), passw
     access_token = login_manager.create_access_token(
         data={"sub": email}, expires=expiry_time
     )
-        
+    
     # successful login
     response = RedirectResponse(url="/", status_code=302)
     login_manager.set_cookie(response, access_token)
@@ -89,7 +89,7 @@ def create_session(user_uuid: str, expiry_time: timedelta):
 def handle_client_login(request: Request, email: str = Body(...), password: str = Body(...), remember: bool = Body(False)):
     email = email.lower()
     
-    user = dashboard_load_user(email)
+    user = load_user(email)
 
     # check if user exists and password is correct
     if not user or not check_password_hash(user.get_password_hash(), password):
@@ -108,3 +108,27 @@ def handle_client_login(request: Request, email: str = Body(...), password: str 
         "message": "Logged in successfully",
         "session_id": session_id
     })
+
+@auth.post("/client-register")
+async def handle_client_register(request: Request, email: str = Body(...), name: str = Body(...), password: str = Body(...), repassword: str = Body(...) ):
+    
+    # validate email format
+    if "@" not in parseaddr(email)[1]:
+        return JSONResponse(status_code=400, content={"message": "Invalid email format"})
+    
+    user = load_user(email)
+    
+    # check if user already exists
+    if user:
+        return JSONResponse(status_code=400, content={"message": "User already exists"})
+    
+    # verify password entered correctly
+    if password != repassword:
+        return JSONResponse(status_code=400, content={"message": "Passwords not the same"})
+    
+    # create new user and update the database
+    user_manager.create_new_user(email, name, generate_password_hash(password), is_admin=False)
+    user_manager.commit()
+
+    # successful registration
+    return JSONResponse(status_code=200, content={"message": "Registered successfully"})
