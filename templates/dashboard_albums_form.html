@@ -6,10 +6,10 @@
 {% endblock %}
 
 {% block title %}
-    {% if edit_song %}
-        Edit Song
+    {% if edit_album %}
+        Edit Album
     {% else %}
-        Add Song
+        Add Album
     {% endif %}
 {% endblock %}
 
@@ -18,16 +18,8 @@
 <div class="w-50">
     <form class="d-flex flex-column" style="gap: 10px" method="post" action="#" enctype="multipart/form-data">
         <div class="form-group">
-            <label for="song_title" class="form-label">Song Title</label>
-            <input type="text" class="form-control" name="song_title" placeholder="Enter the song title" value="{% if edit_song %}{{ edit_song.title }}{% endif %}">
-        </div>
-        <div class="form-group">
-            <label for="genres" class="form-label">Genres</label>
-            <select class="form-select" name="genres" id="genres_select" aria-label="select genre" multiple="multiple">
-                {% for genre in genres %}
-                <option value="{{ genre.uuid }}">{{ genre.name }}</option>
-                {% endfor %}
-            </select>
+            <label for="album_title" class="form-label">Album Title</label>
+            <input type="text" class="form-control" name="album_title" placeholder="Enter the album title" value="{% if edit_album %}{{ edit_album.title }}{% endif %}">
         </div>
         <div class="form-group">
             <label for="artists" class="form-label">Artists</label>
@@ -38,12 +30,20 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="song_file" class="form-label">Song File</label>
-            <input class="form-control" type="file" name="song_file" id="song_file">
+            <label for="songs" class="form-label">Songs</label>
+            <select class="form-select" name="songs" id="songs_select" aria-label="select songs" multiple="multiple">
+                {% for song in songs %}
+                    <option value="{{ song.uuid }}">{{ song.title }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="form-group">
-            <button type="submit" name="action" value="{% if edit_song %}edit{% else %}submit{% endif %}" class="btn btn-success">Submit</button>
-            {% if edit_song %}
+            <label for="album_cover" class="form-label">Album Cover</label>
+            <input class="form-control" type="file" name="album_cover" id="album_cover">
+        </div>
+        <div class="form-group">
+            <button type="submit" name="action" value="{% if edit_album %}edit{% else %}submit{% endif %}" class="btn btn-success">Submit</button>
+            {% if edit_album %}
             <button type="submit" name="action" value="delete" class="btn btn-danger">Delete</button>
             {% endif %}
             <button class="btn" onclick="history.back()">Cancel</button>
@@ -57,15 +57,14 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(() => {
-    $('#genres_select').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Select genre(s)'
-    });
-
-
     $('#artists_select').select2({
         theme: 'bootstrap-5',
         placeholder: 'Select artist(s)'
+    });
+
+    $('#songs_select').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select song(s)'
     });
 });
 </script>

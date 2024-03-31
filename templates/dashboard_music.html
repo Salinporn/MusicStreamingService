@@ -17,12 +17,16 @@
   <li class="nav-item" role="presentation">
     <button class="nav-link" id="albums-tab" data-bs-toggle="tab" data-bs-target="#albums" type="button" role="tab" aria-controls="albums" aria-selected="false">Albums</button>
   </li>
+    <li class="nav-item" role="presentation">
+    <button class="nav-link" id="genres-tab" data-bs-toggle="tab" data-bs-target="#genres" type="button" role="tab" aria-controls="genres" aria-selected="false">Genres</button>
+  </li>
 </ul>
 
 
 <!-- tab panes -->
 <div class="d-flex flex-column" style="gap: 10px;">
     <div class="tab-content">
+
         <div class="tab-pane active" id="songs" role="tabpanel" aria-labelledby="songs-tab">
             <div class="w-100">
                 <table class="table table-hover overflow-auto text-nowrap m-0 w-100" id="songsTable">
@@ -37,21 +41,30 @@
                     </thead>
                     <tbody>
                         {% for s in songs %}
-                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_users_edit', user_id=u.uuid) }}'">
+                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_songs_edit', song_id=s.uuid) }}'">
                                 <td>{{ loop.index }}</td>
                                 <td>{{ s.title }}</td>
-                                <td>{{ s.genre }}</td>
-                                <td>{{ s.artist }}</td>
-                                <td>{{ s.album }}</td>
+                                <td>
+                                    {% for g in s.genres %}
+                                        {{ g.name }}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for a in s.artists %}
+                                        {{ a.name }}
+                                    {% endfor %}
+                                </td>
+                                <td>{{ s.album.title }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             <div class="button-area">
-                <a class="btn btn-success" href="/dashboard/users/add">Add User</a>
+                <a class="btn btn-success" href="/dashboard/music/songs/add">Add Song</a>
             </div>
         </div>
+
         <div class="tab-pane" id="artists" role="tabpanel" aria-labelledby="artists-tab">
             <div class="w-100">
                 <table class="table table-hover overflow-auto text-nowrap m-0 w-100" id="artistsTable">
@@ -59,38 +72,27 @@
                         <tr class="table-dark">
                             <th scope="col">#</th>
                             <th scope="col">Name</th>
-                            <th scope="col">Description</th>
                             <th scope="col">No. Albums</th>
                             <th scope="col">No. Songs</th>
-                            <th scope="col">No. Followers</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for a in artists %}
-                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_users_edit', user_id=u.uuid) }}'">
+                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_artists_edit', artist_id=a.uuid) }}'">
                                 <td>{{ loop.index }}</td>
                                 <td>{{ a.name }}</td>
-                                <td>{{ a.description }}</td>
-                                <td>{{ len(a.albums) }}</td>
-                                <td>{{ len(a.songs) }}</td>
-                                <td>{{ len(a.followers) }}</td>
+                                <td>{{ a.albums | length }}</td>
+                                <td>{{ a.songs | length }}</td>
                             </tr>
                         {% endfor %}
-                        <tr style="cursor: pointer;">
-                            <td>1</td>
-                            <td>test1</td>
-                            <td>test2</td>
-                            <td>test3</td>
-                            <td>test4</td>
-                            <td>test5</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
             <div class="button-area">
-                <a class="btn btn-success" href="/dashboard/users/add">Add User</a>
+                <a class="btn btn-success" href="/dashboard/music/artists/add">Add Artist</a>
             </div>
         </div>
+
         <div class="tab-pane" id="albums" role="tabpanel" aria-labelledby="albums-tab">
             <div class="w-100">
                 <table class="table table-hover overflow-auto text-nowrap m-0 w-100" id="artistsTable">
@@ -98,38 +100,55 @@
                         <tr class="table-dark">
                             <th scope="col">#</th>
                             <th scope="col">Name</th>
-                            <th scope="col">Description</th>
-                            <th scope="col">No. Albums</th>
-                            <th scope="col">No. Songs</th>
-                            <th scope="col">No. Followers</th>
+                            <th scope="col">Artists</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for a in albums %}
-                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_users_edit', user_id=u.uuid) }}'">
+                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_albums_edit', album_id=a.uuid) }}'">
                                 <td>{{ loop.index }}</td>
                                 <td>{{ a.title }}</td>
-                                <td>{{ a.description }}</td>
-                                <td>{{ len(a.albums) }}</td>
-                                <td>{{ len(a.songs) }}</td>
-                                <td>{{ len(a.followers) }}</td>
+                                <td>
+                                    {% for a in a.artists %}
+                                        {{ a.name }}
+                                    {% endfor %}
+                                </td>
                             </tr>
                         {% endfor %}
-                        <tr style="cursor: pointer;">
-                            <td>1</td>
-                            <td>test1</td>
-                            <td>test2</td>
-                            <td>test3</td>
-                            <td>test4</td>
-                            <td>test5</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
             <div class="button-area">
-                <a class="btn btn-success" href="/dashboard/users/add">Add User</a>
+                <a class="btn btn-success" href="/dashboard/music/albums/add">Add Album</a>
             </div>
         </div>
+
+        <div class="tab-pane" id="genres" role="tabpanel" aria-labelledby="genres-tab">
+            <div class="w-100">
+                <table class="table table-hover overflow-auto text-nowrap m-0 w-100" id="genresTable">
+                    <thead>
+                        <tr class="table-dark">
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">No. Songs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for g in genres %}
+                            <tr style="cursor: pointer;" onclick="window.location = '{{ url_for('dashboard_genres_edit', genre_id=g.uuid) }}'">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ g.name }}</td>
+                                <td>{{ g.songs | length }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="button-area">
+                <a class="btn btn-success" href="/dashboard/music/genres/add">Add Genre</a>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}

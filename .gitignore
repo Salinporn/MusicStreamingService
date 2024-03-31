@@ -2,3 +2,6 @@ __pycache__
 start.sh
 .env
 instances
+uploads/album_covers/*
+uploads/genre/*
+uploads/media/*

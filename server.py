@@ -3,12 +3,13 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
-from database import DBManager, UserManager
+from database import DBManager, UserManager, MusicManager
 
 db_manager = DBManager()
 root = db_manager.get_root()
 
 user_manager = UserManager(root)
+music_manager = MusicManager(root)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
