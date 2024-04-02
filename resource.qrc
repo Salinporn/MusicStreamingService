@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="resources">
+    <file>assets/images/playlist_placeholder.jpg</file>
     <file>assets/images/5.png</file>
     <file>assets/images/1989.jpg</file>
     <file>assets/images/add.png</file>

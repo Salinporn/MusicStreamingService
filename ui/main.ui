@@ -103,7 +103,7 @@ QLineEdit {
 
 /* sidebar styles */
 
-#thumbnail {
+#player_thumbnail {
 	background-color: #111111;
 }
 
@@ -464,7 +464,7 @@ QLineEdit {
                <number>18</number>
               </property>
               <item>
-               <widget class="QLabel" name="thumbnail">
+               <widget class="QPushButton" name="player_thumbnail">
                 <property name="minimumSize">
                  <size>
                   <width>240</width>
@@ -476,6 +476,15 @@ QLineEdit {
                 </property>
                 <property name="text">
                  <string/>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>240</width>
+                  <height>240</height>
+                 </size>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -578,7 +587,7 @@ QLineEdit {
                   <height>35</height>
                  </size>
                 </property>
-                <widget class="QToolButton" name="next_btn">
+                <widget class="QToolButton" name="sidebar_player_next_button">
                  <property name="geometry">
                   <rect>
                    <x>210</x>
@@ -601,7 +610,7 @@ QLineEdit {
                   </size>
                  </property>
                 </widget>
-                <widget class="QToolButton" name="play_pause_btn">
+                <widget class="QToolButton" name="sidebar_player_play_pause_button">
                  <property name="geometry">
                   <rect>
                    <x>105</x>
@@ -628,7 +637,7 @@ QLineEdit {
                   <bool>true</bool>
                  </property>
                 </widget>
-                <widget class="QToolButton" name="previous_btn">
+                <widget class="QToolButton" name="sidebar_player_previous_button">
                  <property name="geometry">
                   <rect>
                    <x>0</x>
@@ -1257,8 +1266,8 @@ QLineEdit {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>186</width>
-                    <height>164</height>
+                    <width>142</width>
+                    <height>145</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -1523,8 +1532,8 @@ color: #D0D0D0;</string>
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>770</width>
-                        <height>598</height>
+                        <width>192</width>
+                        <height>41</height>
                        </rect>
                       </property>
                       <layout class="QVBoxLayout" name="verticalLayout_18">
@@ -2638,7 +2647,7 @@ color: #D0D0D0;</string>
             <widget class="QWidget" name="player_page_header" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout_9">
               <item>
-               <widget class="QToolButton" name="minimize_page_button">
+               <widget class="QToolButton" name="player_page_back_button">
                 <property name="cursor">
                  <cursorShape>PointingHandCursor</cursorShape>
                 </property>
@@ -2717,10 +2726,10 @@ color: #D0D0D0;</string>
             </spacer>
            </item>
            <item>
-            <widget class="QWidget" name="player_content" native="true">
+            <widget class="QWidget" name="player_page_content" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout_10">
               <item>
-               <widget class="QLabel" name="player_thumbnail">
+               <widget class="QLabel" name="player_page_thumbnail">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -2739,7 +2748,7 @@ color: #D0D0D0;</string>
                </widget>
               </item>
               <item>
-               <widget class="QWidget" name="player_container" native="true">
+               <widget class="QWidget" name="player_page_container" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
                   <horstretch>0</horstretch>
@@ -2833,13 +2842,13 @@ color: #D0D0D0;</string>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QWidget" name="player_buttons" native="true">
+                  <widget class="QWidget" name="player_page_buttons" native="true">
                    <layout class="QHBoxLayout" name="horizontalLayout_17">
                     <property name="spacing">
                      <number>0</number>
                     </property>
                     <item>
-                     <widget class="QToolButton" name="shuffle_button">
+                     <widget class="QToolButton" name="player_page_shuffle_button">
                       <property name="text">
                        <string/>
                       </property>
@@ -2859,7 +2868,7 @@ color: #D0D0D0;</string>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QToolButton" name="previous_button">
+                     <widget class="QToolButton" name="player_page_previous_button">
                       <property name="text">
                        <string/>
                       </property>
@@ -2876,13 +2885,14 @@ color: #D0D0D0;</string>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QToolButton" name="play_pause_button">
+                     <widget class="QToolButton" name="player_page_play_pause_button">
                       <property name="text">
                        <string/>
                       </property>
                       <property name="icon">
                        <iconset resource="../resource.qrc">
-                        <normaloff>:/resources/assets/images/play.png</normaloff>:/resources/assets/images/play.png</iconset>
+                        <normaloff>:/resources/assets/images/play.png</normaloff>
+                        <normalon>:/resources/assets/images/pause.png</normalon>:/resources/assets/images/play.png</iconset>
                       </property>
                       <property name="iconSize">
                        <size>
@@ -2890,10 +2900,13 @@ color: #D0D0D0;</string>
                         <height>24</height>
                        </size>
                       </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QToolButton" name="next_button">
+                     <widget class="QToolButton" name="player_page_next_button">
                       <property name="text">
                        <string/>
                       </property>
@@ -2910,7 +2923,7 @@ color: #D0D0D0;</string>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QToolButton" name="loop_button">
+                     <widget class="QToolButton" name="player_page_loop_button">
                       <property name="text">
                        <string/>
                       </property>
@@ -2964,7 +2977,6 @@ color: #D0D0D0;</string>
   </action>
  </widget>
  <resources>
-  <include location="../resource.qrc"/>
   <include location="../resource.qrc"/>
  </resources>
  <connections/>

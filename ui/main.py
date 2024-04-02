@@ -3,22 +3,22 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QVBoxLayout, QGridLayout, QSizePolicy,
     QPushButton, QToolButton,
     QLabel)
-from PySide6.QtGui import (QIcon, QCursor, QMouseEvent, QPixmap)
+from PySide6.QtGui import (QIcon, QCursor, QMouseEvent, QPixmap, QImage)
 from PySide6.QtCore import (
-    QObject, Qt, QSize, QUrl,
-    QTimer, Signal, QByteArray,
-    QJsonDocument, QSettings, QStandardPaths)
+    QObject, Qt, QSize, QUrl, QEventLoop, QUrlQuery, QTemporaryFile,
+    QTimer, Signal, QByteArray, QDateTime, QDir,
+    QJsonDocument, QSettings, QProcess)
 from PySide6.QtNetwork import (
     QNetworkCookieJar, QNetworkCookie,
     QNetworkAccessManager,
     QNetworkRequest, QNetworkReply,
     QSslConfiguration, QSsl)
 from PySide6.QtMultimedia import (QMediaPlayer, QAudioOutput)
+from ui.flow_layout import FlowLayout
 from ui.main_ui import Ui_MainWindow
-import sys
 from types import FunctionType
 
-from backend.models import Playlist, Song, Category
+from backend.models import *
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     SERVER_URL = "http://localhost/"
@@ -35,18 +35,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.sign_in_button.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.login_page))
         self.sign_up_button.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.register_page))
-        
+                
         # setup
-        self.setup_settings()
         self.setup_networking()
-        self.setup_login()
-        self.setup_register()
         self.setup_home_page()
         self.setup_browse_page()
         self.setup_library_page()
         self.setup_profile_page()
         self.setup_player()
         self.setup_playlists()
+        
+        self.setup_settings()
+        self.setup_login()
+        self.setup_register()
 
     # -- networking --
     def setup_networking(self):
@@ -56,18 +57,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.cookie_jar = QNetworkCookieJar()
         self.network_manager.setCookieJar(self.cookie_jar)
-                
-    def perform_get_request(self, url: str, callback: FunctionType):
+
+    def perform_get_request(self, url: str, data: dict=None) -> QNetworkReply:
         request_url = QUrl(url)
+
+        if data is not None:
+            query_params = QUrlQuery()
+            for key, value in data.items():
+                query_params.addQueryItem(key, value)
+            request_url.setQuery(query_params)
+
         request_url.setPort(self.SERVER_PORT)
 
         request = QNetworkRequest(request_url)
         request.setSslConfiguration(self.ssl_config)
         # request.setHeader(...)
-        self.network_manager.finished.connect(lambda reply: self.handle_response(reply, callback))
-        self.network_manager.get(request)
         
-    def perform_post_request(self, url: str, data: dict, callback: FunctionType):
+        reply = self.network_manager.get(request)
+        
+        # wait for reply...
+        loop = QEventLoop()
+        reply.finished.connect(loop.quit)
+        loop.exec()
+        
+        # check for errors
+        self.check_reply_for_errors(reply)
+        
+        return reply
+
+    def perform_post_request(self, url: str, data: dict) -> QNetworkReply:
         request_url = QUrl(url)
         request_url.setPort(self.SERVER_PORT)
 
@@ -75,29 +93,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         request.setSslConfiguration(self.ssl_config)
         request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json")
         
-        # maybe? check for errors and call callback
-        self.network_manager.finished.connect(lambda reply: self.handle_response(reply, callback))
-        
-        # self.network_manager.finished.connect(callback)
         request_body = QJsonDocument(data).toJson()
-        self.network_manager.post(request, request_body)
+        reply = self.network_manager.post(request, request_body)
         
-    def handle_response(self, reply: QNetworkReply, callback: FunctionType):
+        # wait for reply...
+        loop = QEventLoop()
+        reply.finished.connect(loop.quit)
+        loop.exec()
+        
+        # check for errors
+        self.check_reply_for_errors(reply)
+        
+        return reply
+
+    def check_reply_for_errors(self, reply: QNetworkReply):
         err = reply.error()
-        if err == QNetworkReply.NetworkError.NoError:
-            callback(reply)
-        elif err == QNetworkReply.NetworkError.AuthenticationRequiredError:
-            # todo: handle incorrect credentials
+        if err == QNetworkReply.NetworkError.AuthenticationRequiredError:
+            # todo: handle incorrect credentials or expired session
             ...
-        else:
+        elif err != QNetworkReply.NetworkError.NoError:
             print(f"Error: {err}")
             print(reply.errorString())
-        reply.deleteLater()
-        
-        self.network_manager.finished.disconnect()
+            
+            raise Exception(err) # ??
 
     # -- login --
     LOGIN_ENDPOINT = "client-login"
+    USER_DATA_ENDPOINT = "user-data"
     def setup_login(self):
         self.login_button.clicked.connect(self.handle_login)
         self.session = None
@@ -107,16 +129,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         loaded_cookies = QNetworkCookie.parseCookies(self.settings.value("session"))
         
-        self.settings.endGroup()
-
         if loaded_cookies:
             self.session = loaded_cookies[0]
             
-            print(self.session)
-            
-            # todo: check if cookie is expired
+            # check if cookie is expired
+            time_to_expiry = QDateTime.currentDateTimeUtc().secsTo(self.session.expirationDate())
+            print(time_to_expiry)
+            if time_to_expiry <= 0:
+                self.settings.setValue("session", None)
+            else:
+                # add session cookie to cookie jar
+                self.network_manager.cookieJar().insertCookie(self.session)
+                
+                # FIXME: check first if the cookie is valid
+                self.on_authenticated()
 
-            self.stackedWidget.setCurrentWidget(self.main_page)
+        self.settings.endGroup()
 
     def handle_login(self):
         data = {
@@ -124,13 +152,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "password": self.login_password_input.text(),
             "remember": self.remember_checkbox.isChecked()
         }
-        self.perform_post_request(self.SERVER_URL + self.LOGIN_ENDPOINT, data, self.handle_login_response)
         self.login_button.setDisabled(True)
+        reply = self.perform_post_request(self.SERVER_URL + self.LOGIN_ENDPOINT, data)
     
-    def handle_login_response(self, reply: QNetworkReply):
-        # response_data = reply.readAll()
-        # response_json = QJsonDocument.fromJson(response_data).object()
-
         cookies = self.cookie_jar.allCookies()
 
         session_cookie = None
@@ -148,8 +172,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.settings.beginGroup("Authentication")
             self.settings.setValue("session", cookie.toRawForm())
             self.settings.endGroup()
-            
-            self.stackedWidget.setCurrentWidget(self.main_page)
+
+            self.on_authenticated()
         else:
             # todo: incorrect credentials??
             pass
@@ -159,20 +183,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.remember_checkbox.setChecked(False)
         
         self.login_button.setDisabled(False)
-    
-    def logout(self):
+        
+        reply.deleteLater()
+
+    def get_user_data(self):
+        reply = self.perform_get_request(self.SERVER_URL + self.USER_DATA_ENDPOINT)
+        
+        user_data = QJsonDocument.fromJson(reply.readAll()).object()
+
+        reply.deleteLater()
+        
+        return user_data
+
+    def on_authenticated(self):
+        # authenticated successfully, now use session cookie to get info
+        
+        user_data = self.get_user_data()
+        
+        print(user_data)
+        
+        self.user = User(**user_data)
+        
+        self.user_profile_button.setText(self.user.get_name())
+        
+        self.load_home_page()
+        
+        # TODO: TEMP - remove this
+        self.play_song(Song(
+            "1faa61d5-17b5-4879-9584-282a825d4e61",
+            "test",
+            "test",
+            247800
+        ))
+
+        self.stackedWidget.setCurrentWidget(self.main_page)
+
+    def handle_logout(self):
         self.settings.beginGroup("Authentication")
         self.settings.setValue("session", None)
         self.settings.endGroup()
-            
-        self.session = None
-        self.stackedWidget.setCurrentWidget(self.login_page)
-    
+
     # -- register --
     REGISTER_ENDPOINT = "client-register"
     def setup_register(self):
         self.register_button.clicked.connect(self.handle_register)
-    
+
     def handle_register(self):
         data = {
             "email": self.register_email_input.text(),
@@ -180,67 +235,85 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "password": self.register_password_input.text(),
             "repassword": self.register_confirm_password_input.text()
         }
-        self.perform_post_request(self.SERVER_URL + self.REGISTER_ENDPOINT, data, self.handle_register_response)
-        # self.login_button.setDisabled(True)
-    
-    def handle_register_response(self, reply: QNetworkReply):
+        self.register_button.setDisabled(True)
+        
+        reply = self.perform_post_request(self.SERVER_URL + self.REGISTER_ENDPOINT, data)
         response_data = reply.readAll()
         response_json = QJsonDocument.fromJson(response_data).object()
-
-        print(response_json)
 
         if reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute) == 200:
             # todo: maybe have a message that says registered successfully?
             self.stackedWidget.setCurrentWidget(self.login_page)
+        
+        self.register_button.setDisabled(False)
+        
+        reply.deleteLater()
 
     # -- home page --
     def setup_home_page(self):
         self.recent_contents.setLayout(QVBoxLayout())
         self.recommend_contents.setLayout(QHBoxLayout())
         self.categories_contents.setLayout(QHBoxLayout())
-        
-        # -- TEST --
-        playlist = Playlist("test", "test", ":resources/assets/images/1989.jpg")
-        self.recent_contents.layout().addWidget(
-            SmallPlaylistItem(playlist, self)
-        )
+
+    CATEGORIES_ENDPOINT = "get-categories/"
+    def load_home_page(self):
+        reply = self.perform_get_request(self.SERVER_URL + self.CATEGORIES_ENDPOINT)
+        response_data = reply.readAll()
+        response_json = QJsonDocument.fromJson(response_data).object()
 
         self.recommend_contents.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.recommend_contents.layout().addWidget(
-            BigPlaylistItem(playlist, self)
-        )
-        
-        self.categories = [
-            Category("Pop Music",  "#87CEEB", ":resources/assets/images/pop_music.jpg"),
-            Category("Rock", "#DC143C", ":resources/assets/images/rock.jpg"),
-            Category("Hip Hop", "#7FFF00", ":resources/assets/images/hiphop.png"),
-            Category("Jazz", "#FFC0CB", ":resources/assets/images/jazz.png"),
-            Category("Country Music", "#FFA500", ":resources/assets/images/country.jpg")        
-        ]
-        
         self.categories_contents.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
         
-        for category in self.categories:
+        categories = response_json["data"]
+        
+        for category in categories:
+            image_reply = self.perform_get_request(self.SERVER_URL + self.CATEGORIES_ENDPOINT + category["uuid"])
+            image_data = image_reply.readAll()
+            
+            category["image"] = image_data
+
+            category = Category(**category)
             self.categories_contents.layout().addWidget(
                 CategoryItem(category, self)
             )
+
+        # -- TEST --
+        
+        # playlist = Playlist("test", "test", ":resources/assets/images/1989.jpg")
+        # self.recent_contents.layout().addWidget(
+        #     SmallPlaylistItem(playlist, self)
+        # )
+
+        # self.recommend_contents.layout().addWidget(
+        #     BigPlaylistItem(playlist, self)
+        # )
+        
+        # self.categories = [
+        #     Category("Pop Music",  "#87CEEB", ":resources/assets/images/pop_music.jpg"),
+        #     Category("Rock", "#DC143C", ":resources/assets/images/rock.jpg"),
+        #     Category("Hip Hop", "#7FFF00", ":resources/assets/images/hiphop.png"),
+        #     Category("Jazz", "#FFC0CB", ":resources/assets/images/jazz.png"),
+        #     Category("Country Music", "#FFA500", ":resources/assets/images/country.jpg")
+        # ]
 
     # -- browse page --
     def setup_browse_page(self):
         self.search_button.clicked.connect(self.search)
         self.recent_searches = []
-        
+
     def search_query(self, query):
         # todo: perform search query
         print(f"query: {query}")
-        
+
     def search(self):
         query = self.search_bar.text()
         
         result = self.search_query(query)
         
-        self.add_recent_search(query)
+        # todo: display results
         
+        self.add_recent_search(query)
+
     def add_recent_search(self, query: str):
         if len(self.recent_searches) == 0:
             self.no_recent_searches_label.hide()
@@ -250,7 +323,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.recent_searches_widget.layout().insertWidget(0, item)
         if len(self.recent_searches) > 5:
             self.remove_recent_search(self.recent_searches[0])
-    
+
     def remove_recent_search(self, recent_search_item: "RecentSearchItem"):
         recent_search_item.deleteLater()
         self.recent_searches.remove(recent_search_item)
@@ -258,23 +331,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if len(self.recent_searches) == 0:
             self.no_recent_searches_label.show()
-            
+
     # -- library page --
+    ADD_USER_PLAYLIST_ENDPOINT = ""
     def setup_library_page(self):
         self.library_playlists = []
         
-        # self.add_playlist_button.clicked.connect()
+        self.add_playlist_button.clicked.connect(self.add_new_playlist)
+
+    def load_library_page(self):
+        self.user.playlists
+
+    def add_new_playlist(self):
+        # self.perform_post_request(self.SERVER_URL + self.ADD_USER_PLAYLIST_ENDPOINT)
         
-        
-        # --TEST--
-        self.add_playlist_button.clicked.connect(lambda: self.add_playlist(Playlist("test", "test", "assets/images/1989.jpg")))
+        self.add_playlist(Playlist("Untitled Playlist", self.user.get_name()))
 
     def add_playlist(self, playlist: Playlist):
         if len(self.library_playlists) == 0:
             self.no_playlists_label.hide()
         
-        # item = LibraryItem(playlist.name, playlist.image_path)
         item = SmallPlaylistItem(playlist, self)
+
         self.library_playlists.append(item)
         self.library_contents.layout().addWidget(item)
 
@@ -284,39 +362,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ProfileItem(
                 text="Languages",
                 parent=self,
-                on_click=lambda: self.open_settings_page(self.settings_language_page)
+                on_click=lambda: self.open_page_with_back_button(self.settings_language_page)
             )
         )
         self.settings_contents.layout().addWidget(
             ProfileItem(
                 text="Theme",
                 parent=self,
-                on_click=lambda: self.open_settings_page(self.settings_theme_page)
+                on_click=lambda: self.open_page_with_back_button(self.settings_theme_page)
             )
         )
         self.settings_contents.layout().addWidget(
             ProfileItem(
-                text="Notifications",
-                parent=self,
-                on_click=lambda: None
-            )
-        ) # TODO: notifications page
-        self.settings_contents.layout().addWidget(
-            ProfileItem(
                 text="About",
                 parent=self,
-                on_click=lambda: self.open_settings_page(self.settings_about_page)
+                on_click=lambda: self.open_page_with_back_button(self.settings_about_page)
             )
         )
         self.settings_contents.layout().addWidget(
             ProfileItem(
                 text="Log Out",
                 parent=self,
-                on_click=self.logout
+                on_click=self.handle_logout
             )
         )
 
-    def open_settings_page(self, page: QWidget):
+    def open_page_with_back_button(self, page: QWidget):
+        previous_page = self.pages_widget.currentWidget()
+        
         self.pages_widget.setCurrentWidget(page)
         
         back_button = QToolButton(page)
@@ -325,17 +398,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         back_button.setIcon(QIcon(":resources/assets/images/go_back.png"))
         back_button.show()
 
-        back_button.clicked.connect(lambda: self.pages_widget.setCurrentWidget(self.profile_page))
+        back_button.clicked.connect(lambda: self.pages_widget.setCurrentWidget(previous_page))
 
-    # -- settings
+    # -- settings --
     def setup_settings(self):
         self.settings = QSettings()
         
         # todo: implement settings
-    
+
     # -- player --
-    AUDIO_ENDPOINT = "stream-audio"
-    
+    AUDIO_ENDPOINT = "stream-audio/"
+
     UPDATE_INTERVAL = 100
     def setup_player(self):
         # set up media player
@@ -344,74 +417,140 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.media_player = QMediaPlayer()
         self.media_player.setAudioOutput(self.audio_output)
         
-        # set audio source
-        self.audio_source_url = QUrl(self.SERVER_URL + self.AUDIO_ENDPOINT)
-        self.audio_source_url.setPort(self.SERVER_PORT)
-        self.media_player.setSource(self.audio_source_url)
-        
         # player ui + logic
         self.is_playing = False
+        self.cur_song = None
         
-        self.play_pause_btn.clicked.connect(self.pause_play)
-        self.previous_btn.clicked.connect(self.previous_clicked)
-        self.next_btn.clicked.connect(self.next_clicked)
+        # sidebar
+        self.sidebar_player_play_pause_button.clicked.connect(self.toggle_pause_play)
+        self.sidebar_player_previous_button.clicked.connect(self.previous_clicked)
+        self.sidebar_player_next_button.clicked.connect(self.next_clicked)
         
-        self.player_slider.sliderPressed.connect(self.pause_play)
-        self.player_slider.sliderMoved.connect(self.set_player_position)
-        self.player_slider.sliderReleased.connect(self.pause_play)
+        self.player_slider.sliderPressed.connect(self.pause)
+        self.player_slider.sliderReleased.connect(lambda: self.set_player_position(self.player_slider.value()))
+        self.player_slider.sliderReleased.connect(self.play)
         
+        # player page
+        self.player_page_play_pause_button.clicked.connect(self.toggle_pause_play)
+        self.player_page_previous_button.clicked.connect(self.previous_clicked)
+        self.player_page_next_button.clicked.connect(self.next_clicked)
+        
+        self.player_page_slider.sliderPressed.connect(self.pause)
+        self.player_page_slider.sliderReleased.connect(lambda: self.set_player_position(self.player_page_slider.value()))
+        self.player_page_slider.sliderReleased.connect(self.play)
+        
+        # logic for updating player
         self.timer = QTimer(self)
         self.timer.setInterval(self.UPDATE_INTERVAL)
         self.timer.timeout.connect(self.update_player)
         
-    def pause_play(self):
-        if self.is_playing:
-            self.media_player.pause()
-            self.timer.stop()
-        else:
-            self.media_player.play()
-            self.timer.start()
-            
-        self.is_playing = not self.is_playing
+        # player page
+        self.player_thumbnail.clicked.connect(self.open_player)
+    
+    def open_player(self):
+        previous_page = self.stackedWidget.currentWidget()
+        
+        self.stackedWidget.setCurrentWidget(self.player_page)
 
+        self.player_page_back_button.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(previous_page))
+
+        self.player_page_song_label.setText(self.cur_song.title)
+        self.player_page_artist_label.setText(self.cur_song.artist)
+
+    def play_song(self, song: Song):
+        self.cur_song = song
+        
+        # set audio source
+        # self.audio_source_url = QUrl(self.SERVER_URL + self.AUDIO_ENDPOINT + song.get_uuid())
+        # self.audio_source_url.setPort(self.SERVER_PORT)
+        
+        # fixme: this works but it's very slow
+        reply = self.perform_get_request(self.SERVER_URL + self.AUDIO_ENDPOINT + song.get_uuid())
+        audio_data = reply.readAll()
+        
+        # write to temporary file
+        temp_file = QTemporaryFile()
+        temp_file.open()
+        temp_file.write(audio_data)
+        
+        print(temp_file.fileName())
+        
+        new_url = QUrl(temp_file.fileName())
+        
+        self.media_player.setSource(new_url)
+        
+        print(self.media_player.source())
+        
+        # self.media_player.setSource(self.audio_source_url)
+        
+        # set player ui to song info
+        self.player_song_label.setText(song.title)
+        self.player_artist_label.setText(song.artist)
+        # self.player_thumbnail.setIcon(QIcon(song.))
+        # self.player_page_thumbnail.setPixmap(song.thumbnail)
+
+    def pause(self):
+        self.media_player.pause()
+        self.timer.stop()
+        self.is_playing = False
+    
+    def play(self):
+        self.media_player.play()
+        self.timer.start()
+        self.is_playing = True
+
+    def toggle_pause_play(self):
+        if self.is_playing:
+            self.pause()
+        else:
+            self.play()
+
+    PREVIOUS_THRESHOLD = 5000
     def previous_clicked(self):
         # before this threshold, go to previous track
         # otherwise, seek to beginning
-        PREVIOUS_THRESHOLD = 5000
     
-        if self.media_player.position() <= PREVIOUS_THRESHOLD:
+        if self.media_player.position() <= self.PREVIOUS_THRESHOLD:
             # todo: go to previous track
             ...
         else:
             self.media_player.setPosition(0)
-    
+
     def next_clicked(self):
         # todo: go to next track
         ...
 
     def set_player_position(self, position):
-        # fixme: get duration from song
-        # duration = self.media_player.duration()
-        
-        duration = 77035 # TEMP FOR TESTING
+        duration = self.cur_song.get_duration()
         
         player_position = duration * (position / 100)
-        print(player_position)
+
         self.media_player.setPosition(int(player_position))
 
+    def update_duration_text(self, duration: int):
+        cur_milliseconds = self.media_player.position()
+        cur_seconds = cur_milliseconds // 1000
+        remaining_seconds = duration // 1000 - cur_seconds
+        
+        self.player_startdur_label.setText(seconds_to_time(cur_seconds))
+        self.player_enddur_label.setText("-" + seconds_to_time(remaining_seconds))
+
     def update_player(self):
-        duration = 77035 # TEMP FOR TESTING
+        # set text for duration
+        duration = self.cur_song.get_duration()
         
-        print(self.media_player.bufferProgress())
-        print(self.media_player.mediaStatus())
+        self.update_duration_text(duration)
+                
+        # update slider
+        # player_position = self.media_player.position() / 10000 # should depend on duration too
         
-        player_pos = (self.media_player.position() / duration) * 100
-
-        self.player_slider.setSliderPosition(player_pos)
-
-        print(self.media_player.position())
-
-        self.play_pause_btn.setChecked(self.media_player.isPlaying())
+        # slider goes from 0 to 100
+        player_position = (self.media_player.position() / duration) * 100
+        self.player_slider.setSliderPosition(int(player_position))
+        
+        # update player ui
+        self.sidebar_player_play_pause_button.setChecked(self.media_player.isPlaying())
+        self.player_page_play_pause_button.setChecked(self.media_player.isPlaying())
         if not self.media_player.isPlaying():
             self.timer.stop()
             self.is_playing = False
@@ -430,7 +569,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # todo: play current playlist
         # self.playlist_play_button.clicked.connect(...)
-    
+
     def open_playlist(self, playlist: Playlist):
         for song_item in self.song_items:
             song_item.deleteLater()
@@ -440,20 +579,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.playlist_no_songs_label.show()
 
         self.cur_playlist = playlist
-        
-        self.pages_widget.setCurrentIndex(4)
+
+        self.open_page_with_back_button(self.playlist_page)
 
         self.playlist_name_label.setText(playlist.name)
         
-        if playlist.image_path:
-            pixmap = QPixmap(playlist.image_path).scaled(120, 120)
-            self.playlist_image_label.setPixmap(pixmap)
-        else:
-            # todo: placeholder image for if there is no image
-            ...
+        image_path = playlist.image_path
         
-        self.add_playlist_item(Song("test title", "test artist", playlist, 123))
+        pixmap = QPixmap(image_path).scaled(120, 120)
+        self.playlist_image_label.setPixmap(pixmap)
         
+        # self.add_playlist_item(Song("test title", "test artist", playlist, 123))
+
     def add_playlist_item(self, song: Song):
         if self.cur_playlist and len(self.cur_playlist.songs) == 0:
             self.playlist_no_songs_label.hide()
@@ -587,7 +724,7 @@ class SmallPlaylistItem(SmallThumbnailItem):
 
 class BigPlaylistItem(BigThumbnailItem):
     def __init__(self, playlist: Playlist, parent: MainWindow = None):
-        super().__init__(playlist.name, playlist.artist, playlist.image_path, parent)
+        super().__init__(playlist.name, playlist.author, playlist.image_path, parent)
         
         self.playlist = playlist
         self.main_window = parent
@@ -608,13 +745,17 @@ class CategoryItem(QPushButton):
         icon_label = QLabel(self)
         icon_label.setFixedSize(120, 120)
         icon_label.setAlignment(Qt.AlignCenter)
-        if category.image_path:
-            pixmap = QPixmap(category.image_path).scaled(120, 120)
-            icon_label.setPixmap(pixmap)
+
+        if category.image:
+            pixmap = QPixmap()
+            pixmap.loadFromData(category.image, format=None, flags=Qt.ImageConversionFlag.AutoColor)
+            scaled_pixmap = pixmap.scaled(120, 120)
+            icon_label.setPixmap(scaled_pixmap)
 
         heading_label = QLabel(self)
         heading_label.setText(category.name)
         heading_label.setAlignment(Qt.AlignLeft)
+        heading_label.setStyleSheet(f"color: red; font-size: 14px; background-color: transparent;")
         heading_label.setStyleSheet(f"color: {category.color}; font-size: 14px; background-color: transparent;")
 
         # subheading_label = QLabel(self)
@@ -655,7 +796,7 @@ class RecentSearchItem(LongLabelButton):
 class LibraryItem(SmallThumbnailItem):
     def __init__(self, text: str, image_path: str, parent=None):
         super().__init__(text, image_path, parent)
-        
+
 # -- profile page --
 class ProfileItem(LongLabelButton):
     def __init__(self, text: str, on_click: FunctionType, parent: MainWindow = None) -> None:
@@ -695,7 +836,7 @@ class SongItem(QWidget):
         labels_widget.layout().addWidget(subheading_label)
         
         duration_label = QLabel(self)
-        duration_label.setText(to_time(duration))
+        duration_label.setText(ms_to_time(duration))
         
         play_button = QToolButton(self)
         play_button.setIcon(QIcon(":/resources/assets/images/play.png"))
@@ -721,19 +862,11 @@ class SongItem(QWidget):
         """)
 
 # -- utility --
-def to_time(duration: float):
-    minutes = duration // 60
-    seconds = duration % 60
+def ms_to_time(duration_ms: float):
+    total_seconds = duration_ms // 1000
+    minutes = total_seconds // 60
+    seconds = total_seconds % 60
     return f"{minutes:01}:{seconds:02}"
 
-def run():
-    app = QApplication(sys.argv)
-    app.setOrganizationName("KMITL")
-    app.setApplicationName("Music Streaming Client")
-
-    window = MainWindow()
-    window.show()
-    app.exec()
-
-if __name__ == "__main__":
-    run()
+def seconds_to_time(duration_s: float):
+    return ms_to_time(duration_s*1000)

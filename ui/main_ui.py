@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QSlider, QSpacerItem, QSplitter, QStackedWidget,
     QToolButton, QVBoxLayout, QWidget)
 import resource_rc
-import resource_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -119,13 +118,13 @@ class Ui_MainWindow(object):
 "\n"
 "/* sidebar styles */\n"
 "\n"
-"#thumbnail {\n"
+"#player_thumbnail {\n"
 "	background-color: #111111;\n"
 "}\n"
 "\n"
 "\n"
-"/* home "
-                        "page styles */\n"
+"/"
+                        "* home page styles */\n"
 "\n"
 "#home_page #home_page_scrollarea_contents > QWidget {\n"
 "	border-radius: 5px;\n"
@@ -170,8 +169,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "#settings_language_page QPushButton:hover,\n"
-"#settin"
-                        "gs_theme_page QPushButton:hover {\n"
+""
+                        "#settings_theme_page QPushButton:hover {\n"
 "	background-color: #303030;\n"
 "	color: #ffffff;\n"
 "}\n"
@@ -307,12 +306,14 @@ class Ui_MainWindow(object):
         self.verticalLayout_25.setSpacing(10)
         self.verticalLayout_25.setObjectName(u"verticalLayout_25")
         self.verticalLayout_25.setContentsMargins(18, 18, 18, 18)
-        self.thumbnail = QLabel(self.player_widget)
-        self.thumbnail.setObjectName(u"thumbnail")
-        self.thumbnail.setMinimumSize(QSize(240, 240))
-        self.thumbnail.setCursor(QCursor(Qt.PointingHandCursor))
+        self.player_thumbnail = QPushButton(self.player_widget)
+        self.player_thumbnail.setObjectName(u"player_thumbnail")
+        self.player_thumbnail.setMinimumSize(QSize(240, 240))
+        self.player_thumbnail.setCursor(QCursor(Qt.PointingHandCursor))
+        self.player_thumbnail.setIconSize(QSize(240, 240))
+        self.player_thumbnail.setFlat(True)
 
-        self.verticalLayout_25.addWidget(self.thumbnail)
+        self.verticalLayout_25.addWidget(self.player_thumbnail)
 
         self.player_song_label = QLabel(self.player_widget)
         self.player_song_label.setObjectName(u"player_song_label")
@@ -373,29 +374,29 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.playback_controls.sizePolicy().hasHeightForWidth())
         self.playback_controls.setSizePolicy(sizePolicy)
         self.playback_controls.setMinimumSize(QSize(0, 35))
-        self.next_btn = QToolButton(self.playback_controls)
-        self.next_btn.setObjectName(u"next_btn")
-        self.next_btn.setGeometry(QRect(210, 0, 35, 35))
+        self.sidebar_player_next_button = QToolButton(self.playback_controls)
+        self.sidebar_player_next_button.setObjectName(u"sidebar_player_next_button")
+        self.sidebar_player_next_button.setGeometry(QRect(210, 0, 35, 35))
         icon4 = QIcon()
         icon4.addFile(u":/resources/assets/images/next.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.next_btn.setIcon(icon4)
-        self.next_btn.setIconSize(QSize(24, 24))
-        self.play_pause_btn = QToolButton(self.playback_controls)
-        self.play_pause_btn.setObjectName(u"play_pause_btn")
-        self.play_pause_btn.setGeometry(QRect(105, 0, 35, 35))
+        self.sidebar_player_next_button.setIcon(icon4)
+        self.sidebar_player_next_button.setIconSize(QSize(24, 24))
+        self.sidebar_player_play_pause_button = QToolButton(self.playback_controls)
+        self.sidebar_player_play_pause_button.setObjectName(u"sidebar_player_play_pause_button")
+        self.sidebar_player_play_pause_button.setGeometry(QRect(105, 0, 35, 35))
         icon5 = QIcon()
         icon5.addFile(u":/resources/assets/images/play.png", QSize(), QIcon.Normal, QIcon.Off)
         icon5.addFile(u":/resources/assets/images/pause.png", QSize(), QIcon.Normal, QIcon.On)
-        self.play_pause_btn.setIcon(icon5)
-        self.play_pause_btn.setIconSize(QSize(24, 24))
-        self.play_pause_btn.setCheckable(True)
-        self.previous_btn = QToolButton(self.playback_controls)
-        self.previous_btn.setObjectName(u"previous_btn")
-        self.previous_btn.setGeometry(QRect(0, 0, 35, 35))
+        self.sidebar_player_play_pause_button.setIcon(icon5)
+        self.sidebar_player_play_pause_button.setIconSize(QSize(24, 24))
+        self.sidebar_player_play_pause_button.setCheckable(True)
+        self.sidebar_player_previous_button = QToolButton(self.playback_controls)
+        self.sidebar_player_previous_button.setObjectName(u"sidebar_player_previous_button")
+        self.sidebar_player_previous_button.setGeometry(QRect(0, 0, 35, 35))
         icon6 = QIcon()
         icon6.addFile(u":/resources/assets/images/previous.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.previous_btn.setIcon(icon6)
-        self.previous_btn.setIconSize(QSize(24, 24))
+        self.sidebar_player_previous_button.setIcon(icon6)
+        self.sidebar_player_previous_button.setIconSize(QSize(24, 24))
 
         self.verticalLayout_25.addWidget(self.playback_controls)
 
@@ -716,7 +717,7 @@ class Ui_MainWindow(object):
         self.profile_page_scrollarea.setWidgetResizable(True)
         self.profile_page_scrollarea_contents = QWidget()
         self.profile_page_scrollarea_contents.setObjectName(u"profile_page_scrollarea_contents")
-        self.profile_page_scrollarea_contents.setGeometry(QRect(0, 0, 186, 164))
+        self.profile_page_scrollarea_contents.setGeometry(QRect(0, 0, 142, 145))
         self.verticalLayout_15 = QVBoxLayout(self.profile_page_scrollarea_contents)
         self.verticalLayout_15.setSpacing(12)
         self.verticalLayout_15.setObjectName(u"verticalLayout_15")
@@ -837,7 +838,7 @@ class Ui_MainWindow(object):
         self.playlist_contents_scrollarea.setWidgetResizable(True)
         self.playlist_contents_scrollarea_contents = QWidget()
         self.playlist_contents_scrollarea_contents.setObjectName(u"playlist_contents_scrollarea_contents")
-        self.playlist_contents_scrollarea_contents.setGeometry(QRect(0, 0, 770, 598))
+        self.playlist_contents_scrollarea_contents.setGeometry(QRect(0, 0, 192, 41))
         self.verticalLayout_18 = QVBoxLayout(self.playlist_contents_scrollarea_contents)
         self.verticalLayout_18.setObjectName(u"verticalLayout_18")
         self.playlist_contents = QWidget(self.playlist_contents_scrollarea_contents)
@@ -1442,15 +1443,15 @@ class Ui_MainWindow(object):
         self.player_page_header.setObjectName(u"player_page_header")
         self.horizontalLayout_9 = QHBoxLayout(self.player_page_header)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.minimize_page_button = QToolButton(self.player_page_header)
-        self.minimize_page_button.setObjectName(u"minimize_page_button")
-        self.minimize_page_button.setCursor(QCursor(Qt.PointingHandCursor))
+        self.player_page_back_button = QToolButton(self.player_page_header)
+        self.player_page_back_button.setObjectName(u"player_page_back_button")
+        self.player_page_back_button.setCursor(QCursor(Qt.PointingHandCursor))
         icon12 = QIcon()
         icon12.addFile(u":/resources/assets/images/go_back.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.minimize_page_button.setIcon(icon12)
-        self.minimize_page_button.setIconSize(QSize(32, 32))
+        self.player_page_back_button.setIcon(icon12)
+        self.player_page_back_button.setIconSize(QSize(32, 32))
 
-        self.horizontalLayout_9.addWidget(self.minimize_page_button)
+        self.horizontalLayout_9.addWidget(self.player_page_back_button)
 
         self.playlist_label = QLabel(self.player_page_header)
         self.playlist_label.setObjectName(u"playlist_label")
@@ -1478,46 +1479,46 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_22.addItem(self.verticalSpacer)
 
-        self.player_content = QWidget(self.player_page_contents)
-        self.player_content.setObjectName(u"player_content")
-        self.horizontalLayout_10 = QHBoxLayout(self.player_content)
+        self.player_page_content = QWidget(self.player_page_contents)
+        self.player_page_content.setObjectName(u"player_page_content")
+        self.horizontalLayout_10 = QHBoxLayout(self.player_page_content)
         self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
-        self.player_thumbnail = QLabel(self.player_content)
-        self.player_thumbnail.setObjectName(u"player_thumbnail")
+        self.player_page_thumbnail = QLabel(self.player_page_content)
+        self.player_page_thumbnail.setObjectName(u"player_page_thumbnail")
         sizePolicy8 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         sizePolicy8.setHorizontalStretch(0)
         sizePolicy8.setVerticalStretch(0)
-        sizePolicy8.setHeightForWidth(self.player_thumbnail.sizePolicy().hasHeightForWidth())
-        self.player_thumbnail.setSizePolicy(sizePolicy8)
-        self.player_thumbnail.setMinimumSize(QSize(350, 350))
+        sizePolicy8.setHeightForWidth(self.player_page_thumbnail.sizePolicy().hasHeightForWidth())
+        self.player_page_thumbnail.setSizePolicy(sizePolicy8)
+        self.player_page_thumbnail.setMinimumSize(QSize(350, 350))
 
-        self.horizontalLayout_10.addWidget(self.player_thumbnail)
+        self.horizontalLayout_10.addWidget(self.player_page_thumbnail)
 
-        self.player_container = QWidget(self.player_content)
-        self.player_container.setObjectName(u"player_container")
-        sizePolicy4.setHeightForWidth(self.player_container.sizePolicy().hasHeightForWidth())
-        self.player_container.setSizePolicy(sizePolicy4)
-        self.verticalLayout_32 = QVBoxLayout(self.player_container)
+        self.player_page_container = QWidget(self.player_page_content)
+        self.player_page_container.setObjectName(u"player_page_container")
+        sizePolicy4.setHeightForWidth(self.player_page_container.sizePolicy().hasHeightForWidth())
+        self.player_page_container.setSizePolicy(sizePolicy4)
+        self.verticalLayout_32 = QVBoxLayout(self.player_page_container)
         self.verticalLayout_32.setObjectName(u"verticalLayout_32")
-        self.player_page_song_label = QLabel(self.player_container)
+        self.player_page_song_label = QLabel(self.player_page_container)
         self.player_page_song_label.setObjectName(u"player_page_song_label")
         self.player_page_song_label.setFont(font1)
 
         self.verticalLayout_32.addWidget(self.player_page_song_label)
 
-        self.player_page_artist_label = QLabel(self.player_container)
+        self.player_page_artist_label = QLabel(self.player_page_container)
         self.player_page_artist_label.setObjectName(u"player_page_artist_label")
         self.player_page_artist_label.setFont(font2)
 
         self.verticalLayout_32.addWidget(self.player_page_artist_label)
 
-        self.player_page_slider = QSlider(self.player_container)
+        self.player_page_slider = QSlider(self.player_page_container)
         self.player_page_slider.setObjectName(u"player_page_slider")
         self.player_page_slider.setOrientation(Qt.Horizontal)
 
         self.verticalLayout_32.addWidget(self.player_page_slider)
 
-        self.player_duration_container = QWidget(self.player_container)
+        self.player_duration_container = QWidget(self.player_page_container)
         self.player_duration_container.setObjectName(u"player_duration_container")
         self.horizontalLayout_12 = QHBoxLayout(self.player_duration_container)
         self.horizontalLayout_12.setSpacing(0)
@@ -1539,59 +1540,58 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_32.addWidget(self.player_duration_container)
 
-        self.player_buttons = QWidget(self.player_container)
-        self.player_buttons.setObjectName(u"player_buttons")
-        self.horizontalLayout_17 = QHBoxLayout(self.player_buttons)
+        self.player_page_buttons = QWidget(self.player_page_container)
+        self.player_page_buttons.setObjectName(u"player_page_buttons")
+        self.horizontalLayout_17 = QHBoxLayout(self.player_page_buttons)
         self.horizontalLayout_17.setSpacing(0)
         self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
-        self.shuffle_button = QToolButton(self.player_buttons)
-        self.shuffle_button.setObjectName(u"shuffle_button")
-        self.shuffle_button.setIcon(icon10)
-        self.shuffle_button.setIconSize(QSize(24, 24))
-        self.shuffle_button.setCheckable(True)
+        self.player_page_shuffle_button = QToolButton(self.player_page_buttons)
+        self.player_page_shuffle_button.setObjectName(u"player_page_shuffle_button")
+        self.player_page_shuffle_button.setIcon(icon10)
+        self.player_page_shuffle_button.setIconSize(QSize(24, 24))
+        self.player_page_shuffle_button.setCheckable(True)
 
-        self.horizontalLayout_17.addWidget(self.shuffle_button)
+        self.horizontalLayout_17.addWidget(self.player_page_shuffle_button)
 
-        self.previous_button = QToolButton(self.player_buttons)
-        self.previous_button.setObjectName(u"previous_button")
-        self.previous_button.setIcon(icon6)
-        self.previous_button.setIconSize(QSize(24, 24))
+        self.player_page_previous_button = QToolButton(self.player_page_buttons)
+        self.player_page_previous_button.setObjectName(u"player_page_previous_button")
+        self.player_page_previous_button.setIcon(icon6)
+        self.player_page_previous_button.setIconSize(QSize(24, 24))
 
-        self.horizontalLayout_17.addWidget(self.previous_button)
+        self.horizontalLayout_17.addWidget(self.player_page_previous_button)
 
-        self.play_pause_button = QToolButton(self.player_buttons)
-        self.play_pause_button.setObjectName(u"play_pause_button")
+        self.player_page_play_pause_button = QToolButton(self.player_page_buttons)
+        self.player_page_play_pause_button.setObjectName(u"player_page_play_pause_button")
+        self.player_page_play_pause_button.setIcon(icon5)
+        self.player_page_play_pause_button.setIconSize(QSize(24, 24))
+        self.player_page_play_pause_button.setCheckable(True)
+
+        self.horizontalLayout_17.addWidget(self.player_page_play_pause_button)
+
+        self.player_page_next_button = QToolButton(self.player_page_buttons)
+        self.player_page_next_button.setObjectName(u"player_page_next_button")
+        self.player_page_next_button.setIcon(icon4)
+        self.player_page_next_button.setIconSize(QSize(24, 24))
+
+        self.horizontalLayout_17.addWidget(self.player_page_next_button)
+
+        self.player_page_loop_button = QToolButton(self.player_page_buttons)
+        self.player_page_loop_button.setObjectName(u"player_page_loop_button")
         icon14 = QIcon()
-        icon14.addFile(u":/resources/assets/images/play.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.play_pause_button.setIcon(icon14)
-        self.play_pause_button.setIconSize(QSize(24, 24))
+        icon14.addFile(u":/resources/assets/images/loop.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.player_page_loop_button.setIcon(icon14)
+        self.player_page_loop_button.setIconSize(QSize(24, 24))
 
-        self.horizontalLayout_17.addWidget(self.play_pause_button)
-
-        self.next_button = QToolButton(self.player_buttons)
-        self.next_button.setObjectName(u"next_button")
-        self.next_button.setIcon(icon4)
-        self.next_button.setIconSize(QSize(24, 24))
-
-        self.horizontalLayout_17.addWidget(self.next_button)
-
-        self.loop_button = QToolButton(self.player_buttons)
-        self.loop_button.setObjectName(u"loop_button")
-        icon15 = QIcon()
-        icon15.addFile(u":/resources/assets/images/loop.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.loop_button.setIcon(icon15)
-        self.loop_button.setIconSize(QSize(24, 24))
-
-        self.horizontalLayout_17.addWidget(self.loop_button)
+        self.horizontalLayout_17.addWidget(self.player_page_loop_button)
 
 
-        self.verticalLayout_32.addWidget(self.player_buttons)
+        self.verticalLayout_32.addWidget(self.player_page_buttons)
 
 
-        self.horizontalLayout_10.addWidget(self.player_container)
+        self.horizontalLayout_10.addWidget(self.player_page_container)
 
 
-        self.verticalLayout_22.addWidget(self.player_content)
+        self.verticalLayout_22.addWidget(self.player_page_content)
 
         self.verticalSpacer_8 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -1623,14 +1623,14 @@ class Ui_MainWindow(object):
         self.browse_button.setText(QCoreApplication.translate("MainWindow", u"  Browse", None))
         self.library_button.setText(QCoreApplication.translate("MainWindow", u"  Library", None))
         self.profile_button.setText(QCoreApplication.translate("MainWindow", u"  Profile", None))
-        self.thumbnail.setText("")
+        self.player_thumbnail.setText("")
         self.player_song_label.setText(QCoreApplication.translate("MainWindow", u"Song Title", None))
         self.player_artist_label.setText(QCoreApplication.translate("MainWindow", u"Artist Name", None))
         self.player_startdur_label.setText(QCoreApplication.translate("MainWindow", u"0:00", None))
         self.player_enddur_label.setText(QCoreApplication.translate("MainWindow", u"-99:99", None))
-        self.next_btn.setText("")
-        self.play_pause_btn.setText("")
-        self.previous_btn.setText("")
+        self.sidebar_player_next_button.setText("")
+        self.sidebar_player_play_pause_button.setText("")
+        self.sidebar_player_previous_button.setText("")
         self.recent_label.setText(QCoreApplication.translate("MainWindow", u"Recently Played", None))
         self.recommend_label.setText(QCoreApplication.translate("MainWindow", u"Songs that you might like", None))
         self.categories_label.setText(QCoreApplication.translate("MainWindow", u"Categories", None))
@@ -1685,18 +1685,18 @@ class Ui_MainWindow(object):
         self.register_button.setText(QCoreApplication.translate("MainWindow", u"Sign Up", None))
         self.sign_in_label.setText(QCoreApplication.translate("MainWindow", u"Already have an account?", None))
         self.sign_in_button.setText(QCoreApplication.translate("MainWindow", u"Click here to Log in", None))
-        self.minimize_page_button.setText("")
+        self.player_page_back_button.setText("")
         self.playlist_label.setText(QCoreApplication.translate("MainWindow", u"Playlist Name", None))
         self.share_button.setText("")
-        self.player_thumbnail.setText("")
+        self.player_page_thumbnail.setText("")
         self.player_page_song_label.setText(QCoreApplication.translate("MainWindow", u"Song Title", None))
         self.player_page_artist_label.setText(QCoreApplication.translate("MainWindow", u"Artist Name", None))
         self.player_page_startdur_label.setText(QCoreApplication.translate("MainWindow", u"0:00", None))
         self.player_page_enddur_label.setText(QCoreApplication.translate("MainWindow", u"-99:99", None))
-        self.shuffle_button.setText("")
-        self.previous_button.setText("")
-        self.play_pause_button.setText("")
-        self.next_button.setText("")
-        self.loop_button.setText("")
+        self.player_page_shuffle_button.setText("")
+        self.player_page_previous_button.setText("")
+        self.player_page_play_pause_button.setText("")
+        self.player_page_next_button.setText("")
+        self.player_page_loop_button.setText("")
     # retranslateUi
 
