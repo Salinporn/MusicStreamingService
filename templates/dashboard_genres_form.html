@@ -22,6 +22,10 @@
             <input type="text" class="form-control" name="genre_name" placeholder="Enter the genre name" value="{% if edit_genre %}{{ edit_genre.name }}{% endif %}">
         </div>
         <div class="form-group">
+            <label for="genre_color" class="form-label">Genre Color</label>
+            <input class="form-control" type="color" name="genre_color" placeholder="Enter the genre color" value="{% if edit_genre %}{{ edit_genre.color }}{% endif %}">
+        </div>
+        <div class="form-group">
             <label for="genre_image" class="form-label">Genre Image</label>
             <input class="form-control" type="file" name="genre_image" id="genre_image">
         </div>

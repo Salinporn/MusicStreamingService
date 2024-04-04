@@ -1,27 +1,27 @@
 from fastapi import APIRouter, Depends, Request, Body, Form, File, UploadFile, status
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, StreamingResponse
+from fastapi.responses import (
+    HTMLResponse, RedirectResponse, Response,
+    FileResponse, StreamingResponse, JSONResponse)
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import HTTPException
 from auth import current_user
 from server import user_manager, music_manager
-from models import Song
+from models import Song, User
+from search import search, index_data
+
 from werkzeug.security import generate_password_hash
 import shutil
 from pathlib import Path
+from datetime import datetime
+from mutagen.mp3 import MP3
+import base64
 
 main = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+index_data()
+
 # -- utilities --
-
-# def get_context(request: Request, user=Depends(current_user)):
-#     context = {"request": request}
-    
-#     if user is not None:
-#         context["logged_in"] = True
-#         context["user"] = user
-#     return context
-
 async def upload_file(file: UploadFile, file_types: list[str], file_path: str):
     # get the file size (in bytes)
     file.file.seek(0, 2)
@@ -123,6 +123,7 @@ MUSIC_FOLDER_PATH = "uploads/"
 SONG_FOLDER_PATH = "media/"
 ALBUM_COVER_FOLDER_PATH = "album_covers/"
 GENRE_FOLDER_PATH = "genre/"
+PLAYLIST_FOLDER_PATH = "playlists/"
 
 @main.get("/dashboard/music", response_class=HTMLResponse)
 def dashboard_music(request: Request, user=Depends(current_user)):
@@ -155,8 +156,12 @@ async def dashboard_songs_add_submit(
     song: Song = music_manager.create_new_song(song_title, genres, artists)
     
     if song:
-        success = await upload_file(song_file, ["audio/mpeg"], MUSIC_FOLDER_PATH + SONG_FOLDER_PATH + song.uuid + Path(song_file.filename).suffix)
-    
+        song_file_name = song.uuid + Path(song_file.filename).suffix
+        success = await upload_file(song_file, ["audio/mpeg"], MUSIC_FOLDER_PATH + SONG_FOLDER_PATH + song_file_name)
+        song.set_file_name(song_file_name)
+        
+        song_metadata = MP3(song_file.file).info
+        song.set_duration(int(song_metadata.length * 1000))
     if song and success:
         return RedirectResponse("/dashboard/music", status_code=302)
     else:
@@ -191,7 +196,12 @@ async def dashboard_songs_edit_submit(
         return
     
     if song_file.filename:
-        success = await upload_file(song_file, ["audio/mpeg"], MUSIC_FOLDER_PATH + SONG_FOLDER_PATH + song.uuid + Path(song_file.filename).suffix)
+        song_file_name = song.uuid + Path(song_file.filename).suffix
+        success = await upload_file(song_file, ["audio/mpeg"], MUSIC_FOLDER_PATH + SONG_FOLDER_PATH + song_file_name)
+        song.set_file_name(song_file_name)
+        
+        song_metadata = MP3(song_file.file).info
+        song.set_duration(int(song_metadata.length * 1000))
     else:
         success = True
     
@@ -280,7 +290,9 @@ async def dashboard_albums_add_submit(
     album = music_manager.create_new_album(album_title, artists, songs)
     
     if album:
-        success = await upload_file(album_cover, ["image/gif", "image/jpeg", "image/png"], MUSIC_FOLDER_PATH + ALBUM_COVER_FOLDER_PATH + album.uuid + Path(album_cover.filename).suffix)
+        album_file_name = album.uuid + Path(album_cover.filename).suffix
+        success = await upload_file(album_cover, ["image/gif", "image/jpeg", "image/png"], MUSIC_FOLDER_PATH + ALBUM_COVER_FOLDER_PATH + album_file_name)
+        album.set_file_name(album_file_name)
     
     if album and success:
         return RedirectResponse("/dashboard/music", status_code=302)
@@ -316,7 +328,9 @@ async def dashboard_albums_edit_submit(
         return
     
     if album_cover.filename:
-        success = await upload_file(album_cover, ["image/gif", "image/jpeg", "image/png"], MUSIC_FOLDER_PATH + ALBUM_COVER_FOLDER_PATH + album.uuid + Path(album_cover.filename).suffix)
+        album_file_name = album.uuid + Path(album_cover.filename).suffix
+        success = await upload_file(album_cover, ["image/gif", "image/jpeg", "image/png"], MUSIC_FOLDER_PATH + ALBUM_COVER_FOLDER_PATH + album_file_name)
+        album.set_file_name(album_file_name)
     else:
         success = True
     
@@ -341,12 +355,15 @@ async def dashboard_genres_add_submit(
         request: Request,
         user = Depends(current_user),
         genre_name: str = Form(...),
+        genre_color: str = Form(...),
         genre_image: UploadFile = Form(...)):
     
-    genre = music_manager.create_new_genre(genre_name)
+    genre = music_manager.create_new_genre(genre_name, genre_color)
     
     if genre:
-        success = await upload_file(genre_image, ["image/gif", "image/jpeg", "image/png"], MUSIC_FOLDER_PATH + GENRE_FOLDER_PATH + genre.uuid + Path(genre_image.filename).suffix)
+        genre_file_name = genre.uuid + Path(genre_image.filename).suffix
+        success = await upload_file(genre_image, ["image/gif", "image/jpeg", "image/png"], MUSIC_FOLDER_PATH + GENRE_FOLDER_PATH + genre_file_name)
+        genre.set_file_name(genre_file_name)
     
     if success:
         return RedirectResponse("/dashboard/music", status_code=302)
@@ -370,6 +387,7 @@ async def dashboard_genres_edit_submit(
         action: str = Form(...),
         user = Depends(current_user),
         genre_name: str = Form(...),
+        genre_color: str = Form(...),
         genre_image: UploadFile = Form(None)):
     
     genre = music_manager.get_genre_from_uuid(genre_id)
@@ -391,27 +409,124 @@ async def dashboard_genres_edit_submit(
                     "request": request,
                     "message": "Genre name is missing"
                 })
-            music_manager.edit_genre(genre_id, genre_name)
+            if not genre_color:
+                return templates.TemplateResponse("dashboard_genres_form.html", {
+                    "request": request,
+                    "message": "Genre color is missing"
+                })
+            music_manager.edit_genre(genre_id, genre_name, genre_color)
         return RedirectResponse("/dashboard/music", status_code=302)
 
 # --- client ---
-def authorized_session_id(self):
-    pass
+def authorized_session_id(request: Request):
+    session_id = request.cookies.get("session")
 
-# -- get user info --
-@main.get("/user-info")
-def get_user_info(user=Depends(authorized_session_id)):
-    pass
+    session = user_manager.get_session(session_id)
+
+    if not session:
+        return
+
+    if datetime.now() > session["expiry"]:
+        # expired cookie
+        user_manager.delete_session(session_id)
+        raise HTTPException(status_code=400, detail="Expired session cookie")
+
+    user_uuid = session["user_uuid"]
+    return user_manager.get_user_from_uuid(user_uuid)
+
+# -- user --
+@main.get("/user-data", response_class=JSONResponse)
+def get_user_data(user: User=Depends(authorized_session_id)):
+    if user:
+        return JSONResponse(content=user.get_json())
+
+# -- playlists --
+@main.post("/add-playlist", response_class=JSONResponse)
+def add_new_playlist(user: User=Depends(authorized_session_id)):
+    playlist = user_manager.create_empty_playlist(user.get_uuid())
+    return JSONResponse(content=playlist.get_json())
+
+@main.get("/get-playlist-image/{playlist_id}", response_class=JSONResponse)
+def get_playlist_image(playlist_id: str, user: User=Depends(authorized_session_id)):
+    playlist = user_manager.get_playlist(user.get_uuid(), playlist_id)
+    
+    if playlist.get_file_name() is not None:
+        return FileResponse(MUSIC_FOLDER_PATH + PLAYLIST_FOLDER_PATH + playlist.get_uuid())
+
+@main.post("/edit-playlist/{playlist_id}", response_class=JSONResponse)
+async def edit_playlist(request: Request, playlist_id: str, playlist_name: str = Body(...), playlist_image: str = Body(...), image_filename: str = Body(...), user: User=Depends(authorized_session_id)):
+    user_manager.edit_playlist(user.get_uuid(), playlist_id, playlist_name)
+    
+    image_data = base64.urlsafe_b64decode(playlist_image)
+    with open(MUSIC_FOLDER_PATH + PLAYLIST_FOLDER_PATH + playlist_id, "wb") as image_file:
+        image_file.write(image_data)
+    
+    return JSONResponse(content={
+        "message": "Edited playlist successfully"
+    })
+
+@main.post("/add-playlist-song/{playlist_id}/{song_id}", response_class=JSONResponse)
+def add_song_to_playlist(playlist_id: str, song_id: str, user: User=Depends(authorized_session_id)):
+    playlist = user_manager.get_playlist(user.get_uuid(), playlist_id)
+    playlist.add_song(music_manager.get_song_from_uuid(song_id))
+    
+    return JSONResponse(status_code=200, content={
+        "message": "Added song successfully"
+    })
+
+@main.post("/add-recently-played/{playlist_id}", response_class=JSONResponse)
+def add_song_to_playlist(playlist_id: str, user: User=Depends(authorized_session_id)):
+    playlist = user_manager.get_playlist(user.get_uuid(), playlist_id)
+    
+    user.add_recently_played(playlist)
+    
+    return JSONResponse(status_code=200, content={
+        "message": "Added playlist to recently played successfully"
+    })
+
+
+
+# -- songs --
+@main.get("/get-songs/{song_id}", response_class=JSONResponse)
+def get_song_data(song_id: str, user: User=Depends(authorized_session_id)):
+    song = music_manager.get_song_from_uuid(song_id)
+    return JSONResponse(content=song.get_json())
+
+# -- albums --
+@main.get("/get-album-image/{album_id}", response_class=FileResponse)
+def get_song_image(album_id: str, user: User=Depends(authorized_session_id)):
+    album = music_manager.get_album_from_uuid(album_id)
+    
+    return FileResponse(MUSIC_FOLDER_PATH + ALBUM_COVER_FOLDER_PATH + album.get_file_name())
+
+# -- categories/genres --
+@main.get("/get-categories", response_class=JSONResponse)
+def get_categories(user: User=Depends(authorized_session_id)):
+    genres = [genre.get_json() for genre in music_manager.get_genres()]
+
+    return JSONResponse(content={"data": genres})
+
+@main.get("/get-categories/{genre_id}", response_class=FileResponse)
+def get_category_image(genre_id: str, user: User=Depends(authorized_session_id)):
+    genre = music_manager.get_genre_from_uuid(genre_id)
+    
+    return FileResponse(MUSIC_FOLDER_PATH + GENRE_FOLDER_PATH + genre.file_name)
+
+# -- search query --
+@main.get("/search")
+def perform_search_query(query: str):
+    result = search(query)
+    
+    return result
 
 # -- handle streaming --
 CHUNK_SIZE = 1024
-
-# DEMO
-@main.get("/stream-audio/")
-async def stream_audio():
+@main.get("/stream-audio/{song_id}", response_class=StreamingResponse)
+async def stream_audio(song_id: str):
+    song = music_manager.get_song_from_uuid(song_id)
     def iterate_audio():
         try:
-            with open(MUSIC_FOLDER_PATH + SONG_FOLDER_PATH + "demo.mp3", "rb") as audio_file:
+            with open(MUSIC_FOLDER_PATH + SONG_FOLDER_PATH + song.get_file_name(), "rb") as audio_file:
                 while True:
                     chunk = audio_file.read(CHUNK_SIZE)
                     if not chunk:
@@ -421,3 +536,13 @@ async def stream_audio():
             raise HTTPException(status_code=404, detail="Audio file not found")
 
     return StreamingResponse(iterate_audio(), media_type="audio/mpeg")
+
+@main.get("/get-audio/{song_id}", response_class=FileResponse)
+async def get_audio(song_id: str):
+    song = music_manager.get_song_from_uuid(song_id)
+    
+    return FileResponse(
+        path=MUSIC_FOLDER_PATH + SONG_FOLDER_PATH + song.get_file_name(),
+        media_type="audio/mpeg",
+        status_code=200
+    )
