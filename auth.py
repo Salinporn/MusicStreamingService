@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi_login import LoginManager
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import timedelta
+from datetime import datetime, timedelta, UTC
 from email.utils import parseaddr
 from server import user_manager, app
 from models import User
@@ -103,11 +103,18 @@ def handle_client_login(request: Request, email: str = Body(...), password: str 
     # session cookie
     session_id = create_session(user.get_uuid(), expiry_time)
     
-    # successful login
-    return JSONResponse(status_code=200, content={
-        "message": "Logged in successfully",
-        "session_id": session_id
+    response = JSONResponse(status_code=200, content={
+        "message": "Logged in successfully"
     })
+    
+    response.set_cookie(
+        key="session",
+        value=session_id,
+        expires=datetime.now(UTC) + expiry_time
+    )
+    
+    # successful login
+    return response
 
 @auth.post("/client-register")
 async def handle_client_register(request: Request, email: str = Body(...), name: str = Body(...), password: str = Body(...), repassword: str = Body(...) ):

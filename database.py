@@ -3,7 +3,7 @@ import zc.lockfile
 from BTrees._OOBTree import BTree
 import os
 import transaction
-from models import User, Song, Artist, Album, Genre
+from models import *
 import uuid
 from werkzeug.security import generate_password_hash
 import datetime
@@ -63,7 +63,7 @@ class UserManager(Manager):
             return True
         else:
             return False
-            
+
     def edit_user(self, old_uuid, email, name, password, is_admin) -> bool:
         if old_uuid not in self.users:
             return False
@@ -81,6 +81,12 @@ class UserManager(Manager):
             
         return True
 
+    def edit_playlist(self, user_id, playlist_id, playlist_name):
+        if user_id in self.users:
+            playlist: Playlist = self.get_playlist(user_id, playlist_id)
+            playlist.set_name(playlist_name)
+            playlist.set_file_name(playlist_id)
+
     def add_session(self, session_id: str, user_uuid: str, expiry_time: datetime.timedelta) -> bool:
         if user_uuid not in self.users:
             return False
@@ -92,6 +98,32 @@ class UserManager(Manager):
         }
         
         return True
+    
+    def delete_session(self, session_id: str):
+        del self.sessions[session_id]
+
+    def get_session(self, session_id: str):
+        if session_id in self.sessions:
+            return self.sessions[session_id]
+
+    # -- playlists --
+    def create_empty_playlist(self, user_uuid):
+        user = self.users[user_uuid]
+
+        playlist_uuid = str(uuid.uuid4())
+        playlist = Playlist(playlist_uuid, "Untitled Playlist", user)
+
+        user.add_playlist(playlist)
+        
+        return playlist
+
+    def get_playlist(self, user_uuid, playlist_uuid):
+        user: User = self.users[user_uuid]
+        
+        playlists: list[Playlist] = user.get_playlists()
+        for playlist in playlists:
+            if playlist.get_uuid() == playlist_uuid:
+                return playlist
 
 class MusicManager(Manager):
     def __init__(self, root):
@@ -100,7 +132,8 @@ class MusicManager(Manager):
         self.artists = self.root["artists"]
         self.albums = self.root["albums"]
         self.genres = self.root["genres"]
-        
+    
+    # -- songs --
     def create_new_song(self, song_title: str, genres: list[str], artists: list[str]):
         song_uuid = str(uuid.uuid4())
         if self.songs.get(song_uuid):
@@ -112,10 +145,10 @@ class MusicManager(Manager):
         song = Song(song_uuid, song_title, genre_list, artist_list)
 
         for g in genres:
-            self.genres[g].add_song(self)
+            self.genres[g].add_song(song)
             
         for a in artists:
-            self.artists[a].add_song(self)
+            self.artists[a].add_song(song)
 
         self.songs[song_uuid] = song
         return song
@@ -147,6 +180,7 @@ class MusicManager(Manager):
         
         return True
     
+    # -- artists --
     def create_new_artist(self, name):
         artist_uuid = str(uuid.uuid4())
         if self.artists.get(artist_uuid):
@@ -184,6 +218,7 @@ class MusicManager(Manager):
         
         return True
 
+    # -- albums --
     def create_new_album(self, album_title: str, artists: list[str], songs: list[str]):
         album_uuid = str(uuid.uuid4())
 
@@ -222,13 +257,14 @@ class MusicManager(Manager):
         self.albums[uuid].edit(title, artists, song)
         return True
     
-    def create_new_genre(self, genre_name):
+    # -- genre --
+    def create_new_genre(self, genre_name, genre_color):
         genre_uuid = str(uuid.uuid4())
         
         if self.genres.get(genre_uuid):
             return None
         
-        genre = Genre(genre_uuid, genre_name)
+        genre = Genre(genre_uuid, genre_name, genre_color)
 
         self.genres[genre_uuid] = genre
         
@@ -247,11 +283,11 @@ class MusicManager(Manager):
         else:
             return False
             
-    def edit_genre(self, old_uuid, genre_name) -> bool:
+    def edit_genre(self, old_uuid, genre_name, genre_color) -> bool:
         if old_uuid not in self.genres:
             return False
         
-        self.genres[old_uuid].edit(genre_name)
+        self.genres[old_uuid].edit(genre_name, genre_color)
         
         return True
 
