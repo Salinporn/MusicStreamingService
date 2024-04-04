@@ -1,8 +1,0 @@
-%import relstorage
-<zodb>
-    <relstorage>
-        <postgresql>
-            dsn dbname='db1527' user='u1527' password='test1527' host='161.246.5.61' port='11222'
-        </postgresql>
-    </relstorage>
-</zodb>
