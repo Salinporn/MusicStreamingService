@@ -1,10 +1,17 @@
 <RCC>
   <qresource prefix="resources">
+    <file>assets/images/loop_off.png</file>
+    <file>assets/images/shuffle_off.png</file>
+    <file>assets/images/loop_on.png</file>
+    <file>assets/images/shuffle_on.png</file>
+    <file>assets/images/minus.png</file>
+    <file>assets/images/song_placeholder.jpg</file>
+    <file>assets/images/thumbnail_placeholder.png</file>
+    <file>assets/images/plus.png</file>
     <file>assets/images/menu.png</file>
     <file>assets/images/edit.png</file>
     <file>assets/images/5.png</file>
     <file>assets/images/playlist_placeholder.png</file>
-    <file>assets/images/song_placeholder.jpg</file>
     <file>assets/images/1989.jpg</file>
     <file>assets/images/add.png</file>
     <file>assets/images/back.png</file>

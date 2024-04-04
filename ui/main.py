@@ -3,14 +3,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QVBoxLayout, QGridLayout, QSizePolicy,
     QPushButton, QToolButton, QMenu, QLineEdit, QFileDialog,
     QLabel)
-from PySide6.QtGui import (QIcon, QCursor, QMouseEvent, QPixmap, QImage, QAction)
+from PySide6.QtGui import (QIcon, QCursor, QRegion, QMouseEvent, QPixmap, QImage, QAction)
 from PySide6.QtCore import (
     QObject, Qt, QSize, QUrl, QEventLoop, QUrlQuery, QTemporaryFile, QCoreApplication,
-    QTimer, Signal, QByteArray, QDateTime, QDir, QThread,
+    QTimer, Signal, QByteArray, QDateTime, QDir, QThread, QFile, QByteArray, QBuffer, QIODevice,
     QJsonDocument, QSettings, QProcess)
 from PySide6.QtNetwork import (
     QNetworkCookieJar, QNetworkCookie,
-    QNetworkAccessManager,
+    QNetworkAccessManager, QHttpMultiPart, QHttpPart,
     QNetworkRequest, QNetworkReply,
     QSslConfiguration, QSsl)
 from PySide6.QtMultimedia import (QMediaPlayer, QAudioOutput)
@@ -19,6 +19,8 @@ from ui.main_ui import Ui_MainWindow
 from ui.custom_widgets import ClickableLabel
 from types import FunctionType
 import sys
+import base64
+import random
 
 from backend.models import *
 
@@ -28,6 +30,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
+        
+        self.setWindowTitle("Music Streaming Client")
         
         # switching pages
         self.home_button.clicked.connect(lambda: self.pages_widget.setCurrentWidget(self.home_page))
@@ -39,6 +43,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sign_up_button.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.register_page))
                 
         # setup
+        self.setup_settings()
         self.setup_networking()
         self.setup_home_page()
         self.setup_browse_page()
@@ -48,7 +53,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setup_playlists()
         self.setup_generic_page()
         
-        self.setup_settings()
         self.setup_login()
         self.setup_register()
 
@@ -71,7 +75,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         request.setSslConfiguration(self.ssl_config)
         
         if headers:
-            for key, value in headers:
+            for key, value in headers.items():
                 request.setHeader(key, value)
         
         if data is not None:
@@ -92,20 +96,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         return reply
 
-    def perform_post_request_sync(self, url: str, data: dict=None, headers: dict=None) -> QNetworkReply:
+    def perform_post_request_sync(self, url: str, data: dict | QByteArray=None, headers: dict=None, is_json: bool=True) -> QNetworkReply:
         request_url = QUrl(url)
         request_url.setPort(self.SERVER_PORT)
 
         request = QNetworkRequest(request_url)
         request.setSslConfiguration(self.ssl_config)
-        request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json")
+        
         if headers:
-            for key, value in headers:
+            for key, value in headers.items():
                 request.setHeader(key, value)
         
         if data is None:
             data = {}
-        request_body = QJsonDocument(data).toJson()
+        if is_json:
+            request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json")
+            request_body: QByteArray = QJsonDocument(data).toJson()
+        else:
+            request_body: QByteArray = data
+
         reply = self.network_manager.post(request, request_body)
         
         # wait for reply...
@@ -126,6 +135,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif err != QNetworkReply.NetworkError.NoError:
             print(f"Error: {err}")
             print(reply.errorString())
+            
+            print(QJsonDocument.fromJson(reply.readAll()).object())
             
             raise Exception(err)
 
@@ -343,12 +354,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.categories_contents.layout().addWidget(
                 CategoryItem(category, self)
             )
-            
+        
         recently_played = self.user.get_recently_played()
+
+        if len(recently_played) > 6:
+            recently_played = recently_played[:6]
+            
         for playlist in recently_played:
             playlist_obj = self.playlists[playlist]
             self.recent_contents.layout().addWidget(
-                SmallThumbnailItem(playlist_obj.name, playlist_obj.image, self)
+                SmallPlaylistItem(playlist_obj, self)
             )
 
         # -- TEST --        
@@ -365,10 +380,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         # update recently played
         recently_played = self.user.get_recently_played()
+        
+        if len(recently_played) > 6:
+            recently_played = recently_played[:6]
+        
         for playlist in recently_played:
             playlist_obj = self.playlists[playlist]
             self.recent_contents.layout().addWidget(
-                SmallThumbnailItem(playlist_obj.name, playlist_obj.image, self)
+                SmallPlaylistItem(playlist_obj, self)
             )
     
     def clear_home_page(self):
@@ -399,13 +418,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 image_data = image_reply.readAll()
                 
                 if image_data == b"null":
-                    print("test")
                     image = QPixmap(":/resources/assets/images/playlist_placeholder.png")
                 else:
                     image = self.data_to_pixmap(image_data)
                 
                 playlist_obj.set_image(image)
-                print(playlist_obj.image)
                 
                 self.playlists[playlist["uuid"]] = playlist_obj
 
@@ -463,7 +480,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # -- HOME PAGE --
     # ---------------
     def setup_home_page(self):
-        self.recent_contents.setLayout(FlowLayout())
+        self.recent_contents.setLayout(QHBoxLayout())
         self.recommend_contents.setLayout(QHBoxLayout())
         self.categories_contents.setLayout(QHBoxLayout())
         
@@ -474,9 +491,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.search_button.clicked.connect(self.search)
         self.recent_searches = []
 
+    # ------------
+    # -- SEARCH --
+    # ------------
+    SEARCH_ENDPOINT = "search"
     def search_query(self, query):
-        # todo: perform search query
-        print(f"query: {query}")
+        
+        reply = self.perform_get_request_sync(self.SERVER_URL + self.SEARCH_ENDPOINT, data={"query": query})
+        
+        reply_data = reply.readAll()
+        reply_json = QJsonDocument.fromJson(reply_data).object()
+        
+        return reply_json
 
     def search(self):
         query = self.search_bar.text()
@@ -510,7 +536,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # ------------------
     ADD_USER_PLAYLIST_ENDPOINT = "add-playlist/"
     def setup_library_page(self):
-        self.library_playlists = []
+        self.library_playlists: list[SmallPlaylistItem] = []
         
         self.add_playlist_button.clicked.connect(self.add_new_playlist)
 
@@ -534,6 +560,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.library_playlists.append(item)
         self.library_contents.layout().addWidget(item)
+        
+    def clear_library_page(self):
+        for i in reversed(range(len(self.library_playlists))):
+            self.recent_contents.layout().removeWidget(self.library_playlists[i])
+            self.library_playlists[i].deleteLater()
+            self.library_playlists.pop(i)
+        
+        self.no_playlists_label.show()
+
+    def update_library_page(self):
+        self.clear_library_page()
+        
+        self.load_library_page()
 
     # ------------------
     # -- PROFILE PAGE --
@@ -587,7 +626,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # --------------
     def setup_settings(self):
         self.settings = QSettings()
-        
         # todo: implement settings
 
     # ------------
@@ -615,6 +653,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.cur_song = None
         self.cur_playlist = None
         self.cur_playlist_index = -1
+        
+        self.is_slider_pressed = False
+        self.was_playing = False
+
+        self.is_shuffle_on = False
+        self.is_loop_on = False
+
+        self.settings.beginGroup("player")
+
+        # shuffle
+        self.shuffle_order = None
+        
+        self.sidebar_player_shuffle_button.clicked.connect(self.toggle_shuffle)
+        self.player_page_shuffle_button.clicked.connect(self.toggle_shuffle)
+
+        shuffle_on = self.settings.value("shuffle")        
+        if shuffle_on:
+            self.is_shuffle_on = bool(shuffle_on)
+
+        # loop
+        self.sidebar_player_loop_button.clicked.connect(self.toggle_loop)
+        self.player_page_loop_button.clicked.connect(self.toggle_loop)
+
+        loop_on = self.settings.value("loop")
+        if loop_on:
+            self.is_loop_on = bool(loop_on)
+
+        # volume
+        slider_pos = self.settings.value("volume")
+        
+        self.settings.endGroup()
+
+        if slider_pos:
+            self.set_volume(int(slider_pos))
+        else:
+            self.set_volume(50)
 
         # sidebar
         self.player_thumbnail.setStyleSheet(self.player_thumbnail.styleSheet() + """\n
@@ -627,18 +701,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sidebar_player_previous_button.clicked.connect(self.previous_clicked)
         self.sidebar_player_next_button.clicked.connect(self.next_clicked)
         
-        self.player_slider.sliderPressed.connect(self.pause)
-        self.player_slider.sliderReleased.connect(lambda: self.set_player_position(self.player_slider.value()))
-        self.player_slider.sliderReleased.connect(self.play)
-        
-        # player page
+        # player slider
+        self.player_slider.sliderPressed.connect(self.slider_pressed)
+        self.player_slider.valueChanged.connect(self.slider_value_changed)
+        self.player_slider.sliderReleased.connect(self.slider_released)
+
         self.player_page_play_pause_button.clicked.connect(self.toggle_pause_play)
         self.player_page_previous_button.clicked.connect(self.previous_clicked)
         self.player_page_next_button.clicked.connect(self.next_clicked)
         
-        self.player_page_slider.sliderPressed.connect(self.pause)
-        self.player_page_slider.sliderReleased.connect(lambda: self.set_player_position(self.player_page_slider.value()))
-        self.player_page_slider.sliderReleased.connect(self.play)
+        self.player_page_slider.sliderPressed.connect(self.slider_pressed)
+        self.player_page_slider.valueChanged.connect(self.slider_value_changed)
+        self.player_page_slider.sliderReleased.connect(self.slider_released)
+        
+        # volume controls
+        self.volume_slider.valueChanged.connect(self.set_volume)
+        self.volume_up_button.clicked.connect(self.volume_up)
+        self.volume_down_button.clicked.connect(self.volume_down)
+        
+        self.player_page_volume_slider.valueChanged.connect(self.set_volume)
+        self.player_page_volume_up_button.clicked.connect(self.volume_up)
+        self.player_page_volume_down_button.clicked.connect(self.volume_down)
         
         # logic for updating player
         self.timer = QTimer(self)
@@ -654,6 +737,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.is_playing = False
         self.cur_song = None
         self.cur_playlist = None
+        self.shuffle_order = None
         
         self.player_slider.setDisabled(True)
         self.player_page_slider.setDisabled(True)
@@ -674,7 +758,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.player_page_artist_label.setText(self.DEFAULT_PLAYER_ARTIST)
         self.player_page_startdur_label.setText(self.DEFAULT_START_DUR)
         self.player_page_enddur_label.setText(self.DEFAULT_END_DUR)
-        self.player_page_thumbnail.setPixmap(QPixmap())
+        self.player_page_thumbnail.setPixmap(QPixmap(":/resources/assets/images/thumbnail_placeholder.png"))
+        self.player_page_playlist_label.setText("")
         
         self.timer.stop()
 
@@ -713,8 +798,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.temp_file.open()
         self.temp_file.write(audio_data)
         
-        print(self.temp_file.fileName())
-        
         new_url = QUrl.fromLocalFile(self.temp_file.fileName())
         
         self.media_player.setSource(new_url)
@@ -726,24 +809,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.player_artist_label.setText(song.artists[0]) # FIXME: right now only supports one artist
 
         self.player_thumbnail.setIcon(QIcon(song.image))
-        self.player_page_thumbnail.setPixmap(song.image)
+        self.player_page_thumbnail.setPixmap(song.image.scaled(350, 350))
         
         self.update_duration_text(song.get_duration())
 
     ADD_RECENTLY_PLAYED_ENDPOINT = "add-recently-played/"
     def play_playlist(self, playlist: Playlist, start_index=0):
+        if len(playlist.get_songs()) == 0:
+            return
+        
+        # set shuffle order
+        self.shuffle_order = list(range(len(playlist.get_songs())))
+        random.shuffle(self.shuffle_order)
+        
         # add to recently played
         self.perform_post_request_async(self.SERVER_URL + self.ADD_RECENTLY_PLAYED_ENDPOINT + playlist.get_uuid(), callback=lambda reply: None)
-        self.user.recently_played.append(playlist.get_uuid())
+        self.user.recently_played.insert(0, playlist.get_uuid())
         
         self.update_home_page()
         
         # play the playlist in sequence
-        self.cur_playlist = playlist        
-        
+        self.cur_playlist = playlist
         self.cur_playlist_index = start_index
         
-        self.play_song(self.cur_playlist.get_song_at_index(self.cur_playlist_index))
+        self.player_page_playlist_label.setText(self.cur_playlist.get_name())
+        
+        self.play_song(self.songs[self.cur_playlist.get_song_at_index(self.cur_playlist_index)])
+    
+    def play_playlist_shuffle(self, playlist: Playlist):
+        self.is_shuffle_on = True
+        self.play_playlist(playlist)
 
     def handle_media_status_changed(self, status: QMediaPlayer.MediaStatus):
         if status == QMediaPlayer.MediaStatus.LoadedMedia:
@@ -752,19 +847,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.cur_playlist:
                 self.cur_playlist_index += 1
                 if self.cur_playlist_index == len(self.cur_playlist.songs):
-                    self.cur_playlist_index = -1
-                    self.clear_player()
+                    if self.is_loop_on:
+                        print("Looping")
+                        self.cur_playlist_index = 0
+                    else:
+                        self.cur_playlist_index = -1
+                        self.clear_player()
+                        return
+                
+                if self.is_shuffle_on and self.shuffle_order:
+                    random_index = self.shuffle_order[self.cur_playlist_index]
+                    self.play_song(self.songs[self.cur_playlist.get_song_at_index(random_index)])
                 else:
-                    self.play_song(self.cur_playlist.get_song_at_index(self.cur_playlist_index))
+                    self.play_song(self.songs[self.cur_playlist.get_song_at_index(self.cur_playlist_index)])
             else:
-                self.clear_player()
+                if self.is_loop_on:
+                    print("Looping")
+                    self.play_song(self.cur_song)
+                else:
+                    self.clear_player()
         elif status == QMediaPlayer.MediaStatus.InvalidMedia:
             pass
         
-        print(status)
-        print(self.media_player.error())
+        # print(status)
+        # print(self.media_player.error())
 
-        print(self.cur_playlist, self.cur_playlist_index)
+        # print(self.cur_playlist, self.cur_playlist_index)
 
     def pause(self):
         if self.cur_song is None:
@@ -796,15 +904,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.media_player.position() <= self.PREVIOUS_THRESHOLD:
             if self.cur_playlist and self.cur_playlist_index != 0:
                 self.cur_playlist_index -= 1
-                self.play_song(self.cur_playlist.get_song_at_index(self.cur_playlist_index))
+                self.play_song(self.songs[self.cur_playlist.get_song_at_index(self.cur_playlist_index)])
         else:
             self.media_player.setPosition(0)
 
     def next_clicked(self):
         if self.cur_playlist and self.cur_playlist_index != len(self.cur_playlist.get_songs())-1:
             self.cur_playlist_index += 1
-            self.play_song(self.cur_playlist.get_song_at_index(self.cur_playlist_index))
+            self.play_song(self.songs[self.cur_playlist.get_song_at_index(self.cur_playlist_index)])
 
+    def set_volume(self, slider_position):
+        self.volume_slider.setSliderPosition(slider_position)
+        self.player_page_volume_slider.setSliderPosition(slider_position)
+        
+        self.audio_output.setVolume(slider_position/100)
+        
+        self.settings.beginGroup("player")
+        self.settings.setValue("volume", slider_position)
+        self.settings.endGroup()
+
+    def volume_up(self):
+        new_volume = min(self.volume_slider.sliderPosition() + 5, 100)
+        self.set_volume(new_volume)
+
+    def volume_down(self):
+        new_volume = max(self.volume_slider.sliderPosition() - 5, 0)
+        self.set_volume(new_volume)
+        
     def set_player_position(self, position):
         if self.cur_song is None:
             return
@@ -815,6 +941,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.media_player.setPosition(int(player_position))
 
+    def slider_pressed(self):
+        if self.is_playing:
+            self.was_playing = True
+            self.pause()
+        else:
+            self.was_playing = False
+        
+        self.is_slider_pressed = True
+    
+    def slider_released(self):
+        if self.was_playing:
+            self.play()
+        
+        self.is_slider_pressed = False
+        
+    def slider_value_changed(self, position):
+        if self.is_slider_pressed:
+            self.set_player_position(position)
+
+    def toggle_shuffle(self):
+        self.is_shuffle_on = not self.is_shuffle_on
+        print("Shuffle:", self.is_shuffle_on)
+
+        self.settings.beginGroup("player")
+        self.settings.setValue("shuffle", self.is_shuffle_on)
+        self.settings.endGroup()
+
+    def toggle_loop(self):
+        self.is_loop_on = not self.is_loop_on
+        print("Loop:", self.is_loop_on)
+
+        self.settings.beginGroup("player")
+        self.settings.setValue("loop", self.is_loop_on)
+        self.settings.endGroup()
+        
     def update_duration_text(self, duration: int):
         cur_milliseconds = self.media_player.position()
         cur_seconds = cur_milliseconds // 1000
@@ -846,6 +1007,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # update player ui
         self.sidebar_player_play_pause_button.setChecked(self.media_player.isPlaying())
         self.player_page_play_pause_button.setChecked(self.media_player.isPlaying())
+        
+        self.sidebar_player_shuffle_button.setChecked(self.is_shuffle_on)
+        self.player_page_shuffle_button.setChecked(self.is_shuffle_on)
+        
+        self.sidebar_player_loop_button.setChecked(self.is_loop_on)
+        self.player_page_loop_button.setChecked(self.is_loop_on)
         if not self.media_player.isPlaying():
             self.timer.stop()
             self.is_playing = False
@@ -874,9 +1041,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.playlist_name_label.setText(playlist.name)
         
-        self.playlist_play_button.clicked.connect(lambda: self.play_playlist(playlist))
-        
+        self.playlist_play_button.clicked.connect(lambda: self.play_playlist(self.opened_playlist))
         self.playlist_edit_button.clicked.connect(self.edit_playlist)
+        self.playlist_shuffle_button.clicked.connect(lambda: self.play_playlist_shuffle(self.opened_playlist))
         
         image = playlist.image
         if image:
@@ -933,6 +1100,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         choose_image_button.setIconSize(QSize(20,20))
         choose_image_button.setStyleSheet("background-color: RGB(0,0,0,0); border: 0px; padding: 0px;")
 
+        self.new_image_path = None
         image_layout.addWidget(choose_image_button)
 
         edit_playlist_contents.addLayout(image_layout)
@@ -944,9 +1112,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         cancel_button.setStyleSheet(button_style_sheet)
         cancel_button.clicked.connect(edit_playlist_popup.close)
         
-        save_button = QPushButton("Save")   
+        save_button = QPushButton("Save")
         buttons_layout.addWidget(save_button)
-        save_button.clicked.connect(lambda: self.save_new_playlist_details(playlist_name.text(), self.image_label.pixmap()))
+        save_button.clicked.connect(lambda: self.save_new_playlist_details(playlist_name.text(), self.new_image_path))
         save_button.setStyleSheet(button_style_sheet)
         save_button.clicked.connect(edit_playlist_popup.close)
         
@@ -962,15 +1130,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if image_path:
             image_name = image_path.split('/')[-1]
-            self.image_label.setText(image_name)  
+            self.image_label.setText(image_name)
+            self.new_image_path = image_path
 
     PLAYLIST_EDIT_ENDPOINT = "edit-playlist/"
-    def save_new_playlist_details(self, playlist_name: str, playlist_image: QPixmap):
+    def save_new_playlist_details(self, playlist_name: str, playlist_image_path: str):
+        
+        playlist_image = QPixmap(playlist_image_path).scaled(120, 120)
+        
+        # multipart = QHttpMultiPart(QHttpMultiPart.ContentType.FormDataType)
+        # text_part = QHttpPart()
+        # text_part.setHeader(QNetworkRequest.KnownHeaders.ContentDispositionHeader, "form-data; name=\"playlist_name\"")
+        # text_part.setBody(playlist_name.encode())
+        
+        # image_part = QHttpPart()
+        # text_part.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, f"image/{playlist_image_path.split('.')[-1]}")
+        # image_part.setHeader(QNetworkRequest.KnownHeaders.ContentDispositionHeader, "form-data; name=\"playlist_image\"")
+        # file = QFile(playlist_image_path)
+        # file.open(QIODevice.OpenModeFlag.ReadOnly)
+        # image_part.setBodyDevice(file)
+        # file.setParent(multipart)
+        
+        # multipart.append(text_part)
+        # multipart.append(image_part)
+        
+        with open(playlist_image_path, "rb") as image_file:
+            image_base64 = base64.urlsafe_b64encode(image_file.read()).decode()
+        
         data = {
-            "name": playlist_name,
-            "image": playlist_image
+            "playlist_name": playlist_name,
+            "playlist_image": image_base64,
+            "image_filename": playlist_image_path.split("/")[-1]
         }
-        reply = self.perform_post_request_sync(self.SERVER_URL + self.PLAYLIST_EDIT_ENDPOINT + self.opened_playlist.get_uuid(), data)
+        
+        # reply = self.perform_post_request_sync(
+            # url=self.SERVER_URL + self.PLAYLIST_EDIT_ENDPOINT + self.opened_playlist.get_uuid(),
+        #     data=multipart,
+        #     headers={QNetworkRequest.KnownHeaders.ContentTypeHeader: f"multipart/form-data; boundary={multipart.boundary()}"},
+        #     is_json=False)
+        
+        reply = self.perform_post_request_sync(
+            url=self.SERVER_URL + self.PLAYLIST_EDIT_ENDPOINT + self.opened_playlist.get_uuid(),
+            data=data
+        )
         reply_data = reply.readAll()
         reply_json = QJsonDocument.fromJson(reply_data).object()
         
@@ -979,6 +1181,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.playlist_name_label.setText(playlist_name)
         self.playlist_image_label.setPixmap(playlist_image)
+        
+        self.update_home_page()
+        self.update_library_page()
 
     def clear_playlist_page(self):
         # for i in reversed(range(self.playlist_contents_scrollarea_contents.layout().count())): 
@@ -1217,7 +1422,8 @@ class BigSongItem(BigThumbnailItem):
             for playlist in playlists:
                 playlist_obj = self.main_window.playlists[playlist]
                 action = QAction(playlist_obj.get_name(), self)
-                action.triggered.connect(lambda: self.add_to_playlist(playlist_obj))
+                action.setData(playlist_obj.get_uuid())
+                action.triggered.connect(self.add_to_playlist)
                 menu.addAction(action)
         else:
             action = QAction("No playlists", self)
@@ -1225,11 +1431,16 @@ class BigSongItem(BigThumbnailItem):
             menu.addAction(action)
         menu.exec_(self.menu_button.mapToGlobal(self.menu_button.rect().bottomRight()))
 
-    def add_to_playlist(self, playlist: Playlist):
+    def add_to_playlist(self):
+        
+        action: QAction = self.sender()
+        
+        playlist = self.main_window.playlists[action.data()]
+
         self.main_window.perform_post_request_sync(
             self.main_window.SERVER_URL + self.main_window.ADD_SONG_PLAYLIST_ENDPOINT + playlist.get_uuid() + "/" + self.song.get_uuid())
         
-        playlist.add_song(self.song)
+        playlist.add_song(self.song.get_uuid())
         
 class CategoryItem(QPushButton):
     def __init__(self, category: Category, parent: MainWindow):
@@ -1355,6 +1566,7 @@ class SongItem(QWidget):
         
         play_button = QToolButton(self)
         play_button.setIcon(QIcon(":/resources/assets/images/play.png"))
+        play_button.setCursor(QCursor(Qt.PointingHandCursor))
 
         play_button.clicked.connect(lambda: self.main_window.play_playlist(playlist, index))
                 
