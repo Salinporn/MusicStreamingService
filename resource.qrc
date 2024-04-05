@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="resources">
+    <file>assets/images/delete.png</file>
     <file>assets/images/loop_off.png</file>
     <file>assets/images/shuffle_off.png</file>
     <file>assets/images/loop_on.png</file>

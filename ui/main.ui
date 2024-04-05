@@ -160,7 +160,7 @@ QSlider::sub-page:horizontal {
 }	
 
 /* browse page styles */
-#search_bar, #recent_searches_widget, #song_result_scrollarea, #album_result_scrollarea {
+#search_bar, #recent_searches_widget, #song_result_container, #album_result_container, #song_suggestions_container {
 	border-radius: 5px;
 	border: 1px solid #D0D0D0;
 }
@@ -250,7 +250,7 @@ QSlider::sub-page:horizontal {
     <item row="0" column="0">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="main_page">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -885,7 +885,7 @@ QSlider::sub-page:horizontal {
            <item row="0" column="0">
             <widget class="QStackedWidget" name="pages_widget">
              <property name="currentIndex">
-              <number>4</number>
+              <number>7</number>
              </property>
              <widget class="QWidget" name="home_page">
               <property name="enabled">
@@ -906,6 +906,9 @@ QSlider::sub-page:horizontal {
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
                  <property name="horizontalScrollBarPolicy">
                   <enum>Qt::ScrollBarAlwaysOff</enum>
                  </property>
@@ -917,8 +920,8 @@ QSlider::sub-page:horizontal {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>820</width>
-                    <height>680</height>
+                    <width>822</width>
+                    <height>710</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -974,6 +977,9 @@ QSlider::sub-page:horizontal {
                       </item>
                       <item>
                        <widget class="QScrollArea" name="recent_scrollarea">
+                        <property name="frameShape">
+                         <enum>QFrame::NoFrame</enum>
+                        </property>
                         <property name="verticalScrollBarPolicy">
                          <enum>Qt::ScrollBarAlwaysOff</enum>
                         </property>
@@ -985,8 +991,8 @@ QSlider::sub-page:horizontal {
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>782</width>
-                           <height>97</height>
+                           <width>786</width>
+                           <height>99</height>
                           </rect>
                          </property>
                         </widget>
@@ -1006,7 +1012,7 @@ QSlider::sub-page:horizontal {
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
-                       <height>250</height>
+                       <height>265</height>
                       </size>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -1032,6 +1038,9 @@ QSlider::sub-page:horizontal {
                       </item>
                       <item>
                        <widget class="QScrollArea" name="recommend_scrollarea">
+                        <property name="frameShape">
+                         <enum>QFrame::NoFrame</enum>
+                        </property>
                         <property name="verticalScrollBarPolicy">
                          <enum>Qt::ScrollBarAlwaysOff</enum>
                         </property>
@@ -1043,8 +1052,8 @@ QSlider::sub-page:horizontal {
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>782</width>
-                           <height>201</height>
+                           <width>786</width>
+                           <height>218</height>
                           </rect>
                          </property>
                         </widget>
@@ -1064,7 +1073,7 @@ QSlider::sub-page:horizontal {
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
-                       <height>250</height>
+                       <height>265</height>
                       </size>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -1090,6 +1099,9 @@ QSlider::sub-page:horizontal {
                       </item>
                       <item>
                        <widget class="QScrollArea" name="categories_scrollarea">
+                        <property name="frameShape">
+                         <enum>QFrame::NoFrame</enum>
+                        </property>
                         <property name="verticalScrollBarPolicy">
                          <enum>Qt::ScrollBarAlwaysOff</enum>
                         </property>
@@ -1101,8 +1113,8 @@ QSlider::sub-page:horizontal {
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>782</width>
-                           <height>201</height>
+                           <width>786</width>
+                           <height>218</height>
                           </rect>
                          </property>
                         </widget>
@@ -1127,19 +1139,22 @@ QSlider::sub-page:horizontal {
               <layout class="QVBoxLayout" name="verticalLayout_11">
                <item>
                 <widget class="QScrollArea" name="browse_page_scrollarea">
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
                  <property name="horizontalScrollBarPolicy">
                   <enum>Qt::ScrollBarAlwaysOff</enum>
                  </property>
                  <property name="widgetResizable">
                   <bool>true</bool>
                  </property>
-                 <widget class="QWidget" name="browse_page_scrollearea_contents">
+                 <widget class="QWidget" name="browse_page_scrollarea_contents">
                   <property name="geometry">
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>820</width>
-                    <height>755</height>
+                    <width>822</width>
+                    <height>757</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_45">
@@ -1283,7 +1298,7 @@ QSlider::sub-page:horizontal {
                       <item>
                        <widget class="QLabel" name="recent_searches_label">
                         <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                           <horstretch>0</horstretch>
                           <verstretch>0</verstretch>
                          </sizepolicy>
@@ -1318,7 +1333,7 @@ QSlider::sub-page:horizontal {
                          <property name="spacing">
                           <number>0</number>
                          </property>
-                         <item>
+                         <item alignment="Qt::AlignTop">
                           <widget class="QLabel" name="no_recent_searches_label">
                            <property name="text">
                             <string>You have no recent searches.</string>
@@ -1332,96 +1347,361 @@ QSlider::sub-page:horizontal {
                     </widget>
                    </item>
                    <item>
-                    <widget class="QLabel" name="song_result_label">
+                    <widget class="QWidget" name="result_section" native="true">
+                     <property name="enabled">
+                      <bool>true</bool>
+                     </property>
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
-                     <property name="font">
-                      <font>
-                       <family>Segoe UI Semibold</family>
-                       <pointsize>14</pointsize>
-                       <bold>true</bold>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Songs</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QScrollArea" name="song_result_scrollarea">
-                     <property name="frameShape">
-                      <enum>QFrame::Box</enum>
-                     </property>
-                     <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
-                     </property>
-                     <property name="lineWidth">
-                      <number>0</number>
-                     </property>
-                     <property name="widgetResizable">
-                      <bool>true</bool>
-                     </property>
-                     <widget class="QWidget" name="song_result_scrollarea_contents">
-                      <property name="geometry">
-                       <rect>
-                        <x>0</x>
-                        <y>0</y>
-                        <width>800</width>
-                        <height>258</height>
-                       </rect>
+                     <layout class="QVBoxLayout" name="verticalLayout_49">
+                      <property name="leftMargin">
+                       <number>0</number>
                       </property>
-                     </widget>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="QWidget" name="song_result_section" native="true">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>16777215</width>
+                          <height>530</height>
+                         </size>
+                        </property>
+                        <layout class="QVBoxLayout" name="verticalLayout_47">
+                         <property name="spacing">
+                          <number>6</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <widget class="QLabel" name="song_result_label">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <family>Segoe UI Semibold</family>
+                             <pointsize>14</pointsize>
+                             <bold>true</bold>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>Songs</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QWidget" name="song_result_container" native="true">
+                           <layout class="QVBoxLayout" name="verticalLayout_50">
+                            <item>
+                             <widget class="QLabel" name="no_songs_found_label">
+                              <property name="text">
+                               <string>No songs were found.</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item>
+                             <widget class="QScrollArea" name="song_result_scrollarea">
+                              <property name="sizePolicy">
+                               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                               </sizepolicy>
+                              </property>
+                              <property name="frameShape">
+                               <enum>QFrame::NoFrame</enum>
+                              </property>
+                              <property name="frameShadow">
+                               <enum>QFrame::Plain</enum>
+                              </property>
+                              <property name="lineWidth">
+                               <number>0</number>
+                              </property>
+                              <property name="horizontalScrollBarPolicy">
+                               <enum>Qt::ScrollBarAlwaysOff</enum>
+                              </property>
+                              <property name="sizeAdjustPolicy">
+                               <enum>QAbstractScrollArea::AdjustIgnored</enum>
+                              </property>
+                              <property name="widgetResizable">
+                               <bool>true</bool>
+                              </property>
+                              <widget class="QWidget" name="song_result_scrollarea_contents">
+                               <property name="geometry">
+                                <rect>
+                                 <x>0</x>
+                                 <y>0</y>
+                                 <width>786</width>
+                                 <height>68</height>
+                                </rect>
+                               </property>
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                              </widget>
+                             </widget>
+                            </item>
+                           </layout>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QWidget" name="album_result_section" native="true">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>16777215</width>
+                          <height>530</height>
+                         </size>
+                        </property>
+                        <layout class="QVBoxLayout" name="verticalLayout_48">
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <widget class="QLabel" name="album_result_label">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <family>Segoe UI Semibold</family>
+                             <pointsize>14</pointsize>
+                             <bold>true</bold>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>Albums</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QWidget" name="album_result_container" native="true">
+                           <layout class="QVBoxLayout" name="verticalLayout_51">
+                            <item>
+                             <widget class="QLabel" name="no_albums_found_label">
+                              <property name="text">
+                               <string>No albums were found.</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item>
+                             <widget class="QScrollArea" name="album_result_scrollarea">
+                              <property name="sizePolicy">
+                               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                               </sizepolicy>
+                              </property>
+                              <property name="frameShape">
+                               <enum>QFrame::NoFrame</enum>
+                              </property>
+                              <property name="frameShadow">
+                               <enum>QFrame::Plain</enum>
+                              </property>
+                              <property name="lineWidth">
+                               <number>0</number>
+                              </property>
+                              <property name="horizontalScrollBarPolicy">
+                               <enum>Qt::ScrollBarAlwaysOff</enum>
+                              </property>
+                              <property name="sizeAdjustPolicy">
+                               <enum>QAbstractScrollArea::AdjustIgnored</enum>
+                              </property>
+                              <property name="widgetResizable">
+                               <bool>true</bool>
+                              </property>
+                              <widget class="QWidget" name="album_result_scrollarea_contents">
+                               <property name="geometry">
+                                <rect>
+                                 <x>0</x>
+                                 <y>0</y>
+                                 <width>786</width>
+                                 <height>68</height>
+                                </rect>
+                               </property>
+                               <property name="sizePolicy">
+                                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                                 <horstretch>0</horstretch>
+                                 <verstretch>0</verstretch>
+                                </sizepolicy>
+                               </property>
+                              </widget>
+                             </widget>
+                            </item>
+                           </layout>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                     </layout>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QLabel" name="album_result_label">
+                    <widget class="QWidget" name="song_suggestions_section" native="true">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
-                     <property name="font">
-                      <font>
-                       <family>Segoe UI Semibold</family>
-                       <pointsize>14</pointsize>
-                       <bold>true</bold>
-                      </font>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>530</height>
+                      </size>
                      </property>
-                     <property name="text">
-                      <string>Albums</string>
-                     </property>
+                     <layout class="QVBoxLayout" name="verticalLayout_52">
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="QLabel" name="song_suggestions_label">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI Semibold</family>
+                          <pointsize>14</pointsize>
+                          <bold>true</bold>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>You might like</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QWidget" name="song_suggestions_container" native="true">
+                        <layout class="QVBoxLayout" name="verticalLayout_53">
+                         <item>
+                          <widget class="QScrollArea" name="song_suggestions_scrollarea">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="frameShape">
+                            <enum>QFrame::NoFrame</enum>
+                           </property>
+                           <property name="frameShadow">
+                            <enum>QFrame::Plain</enum>
+                           </property>
+                           <property name="lineWidth">
+                            <number>0</number>
+                           </property>
+                           <property name="horizontalScrollBarPolicy">
+                            <enum>Qt::ScrollBarAlwaysOff</enum>
+                           </property>
+                           <property name="sizeAdjustPolicy">
+                            <enum>QAbstractScrollArea::AdjustIgnored</enum>
+                           </property>
+                           <property name="widgetResizable">
+                            <bool>true</bool>
+                           </property>
+                           <widget class="QWidget" name="song_suggestions_scrollarea_contents">
+                            <property name="geometry">
+                             <rect>
+                              <x>0</x>
+                              <y>0</y>
+                              <width>786</width>
+                              <height>99</height>
+                             </rect>
+                            </property>
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                           </widget>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                     </layout>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QScrollArea" name="album_result_scrollarea">
-                     <property name="frameShape">
-                      <enum>QFrame::Box</enum>
+                    <spacer name="verticalSpacer_2">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
                      </property>
-                     <property name="frameShadow">
-                      <enum>QFrame::Plain</enum>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
                      </property>
-                     <property name="lineWidth">
-                      <number>0</number>
-                     </property>
-                     <property name="widgetResizable">
-                      <bool>true</bool>
-                     </property>
-                     <widget class="QWidget" name="album_result_scrollarea_contents">
-                      <property name="geometry">
-                       <rect>
-                        <x>0</x>
-                        <y>0</y>
-                        <width>800</width>
-                        <height>257</height>
-                       </rect>
-                      </property>
-                     </widget>
-                    </widget>
+                    </spacer>
                    </item>
                   </layout>
                  </widget>
@@ -1491,6 +1771,9 @@ QSlider::sub-page:horizontal {
                </item>
                <item>
                 <widget class="QScrollArea" name="library_page_scrollarea">
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
                  <property name="widgetResizable">
                   <bool>true</bool>
                  </property>
@@ -1499,8 +1782,8 @@ QSlider::sub-page:horizontal {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>163</width>
-                    <height>41</height>
+                    <width>822</width>
+                    <height>698</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -1581,6 +1864,9 @@ QSlider::sub-page:horizontal {
                </item>
                <item>
                 <widget class="QScrollArea" name="profile_page_scrollarea">
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
                  <property name="widgetResizable">
                   <bool>true</bool>
                  </property>
@@ -1589,8 +1875,8 @@ QSlider::sub-page:horizontal {
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>820</width>
-                    <height>708</height>
+                    <width>822</width>
+                    <height>710</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -1885,6 +2171,9 @@ color: #D0D0D0;</string>
                    </item>
                    <item>
                     <widget class="QScrollArea" name="playlist_contents_scrollarea">
+                     <property name="frameShape">
+                      <enum>QFrame::NoFrame</enum>
+                     </property>
                      <property name="widgetResizable">
                       <bool>true</bool>
                      </property>
@@ -1995,8 +2284,8 @@ color: #D0D0D0;</string>
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>319</width>
-                       <height>406</height>
+                       <width>804</width>
+                       <height>710</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_42">
@@ -2212,11 +2501,6 @@ color: #D0D0D0;</string>
                          <string>English (US)</string>
                         </property>
                        </item>
-                       <item>
-                        <property name="text">
-                         <string>Thai</string>
-                        </property>
-                       </item>
                       </widget>
                      </item>
                     </layout>
@@ -2321,8 +2605,8 @@ color: #D0D0D0;</string>
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>231</width>
-                       <height>124</height>
+                       <width>804</width>
+                       <height>326</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_39">
@@ -2360,24 +2644,6 @@ color: #D0D0D0;</string>
                          </item>
                         </layout>
                        </widget>
-                      </item>
-                      <item>
-                       <widget class="QLabel" name="theme_preview_label">
-                        <property name="font">
-                         <font>
-                          <pointsize>12</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>Preview</string>
-                        </property>
-                        <property name="margin">
-                         <number>9</number>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QWidget" name="theme_preview_content" native="true"/>
                       </item>
                       <item>
                        <spacer name="verticalSpacer_12">
@@ -3103,26 +3369,6 @@ color: #D0D0D0;</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QToolButton" name="share_button">
-                <property name="cursor">
-                 <cursorShape>PointingHandCursor</cursorShape>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="../resource.qrc">
-                  <normaloff>:/resources/assets/images/share.png</normaloff>:/resources/assets/images/share.png</iconset>
-                </property>
-                <property name="iconSize">
-                 <size>
-                  <width>32</width>
-                  <height>32</height>
-                 </size>
                 </property>
                </widget>
               </item>

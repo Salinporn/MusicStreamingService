@@ -44,19 +44,26 @@ class FlowLayout(QLayout):
         return height
 
     def setGeometry(self, rect):
+        self.update()
         super(FlowLayout, self).setGeometry(rect)
         self._do_layout(rect, False)
 
     def sizeHint(self):
         return self.minimumSize()
-
+        
     def minimumSize(self):
         size = QSize()
 
         for item in self._item_list:
             size = size.expandedTo(item.minimumSize())
 
-        size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
+        margins = self.contentsMargins()
+        # size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
+        size += QSize(margins.left() + margins.right(), margins.top() + margins.bottom())
+        
+        layout_size = self.contentsRect()
+        size.setHeight(self.heightForWidth(layout_size.width()))
+        
         return size
 
     def _do_layout(self, rect, test_only):

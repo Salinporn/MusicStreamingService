@@ -16,11 +16,11 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
-    QGridLayout, QHBoxLayout, QLabel, QLineEdit,
-    QMainWindow, QPushButton, QScrollArea, QSizePolicy,
-    QSlider, QSpacerItem, QSplitter, QStackedWidget,
-    QToolButton, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QCheckBox, QComboBox,
+    QFrame, QGridLayout, QHBoxLayout, QLabel,
+    QLineEdit, QMainWindow, QPushButton, QScrollArea,
+    QSizePolicy, QSlider, QSpacerItem, QSplitter,
+    QStackedWidget, QToolButton, QVBoxLayout, QWidget)
 import resource_rc
 
 class Ui_MainWindow(object):
@@ -177,7 +177,7 @@ class Ui_MainWindow(object):
 "}	\n"
 "\n"
 "/* browse page styles */\n"
-"#search_bar, #recent_searches_widget, #song_result_scrollarea, #album_result_scrollarea {\n"
+"#search_bar, #recent_searches_widget, #song_result_container, #album_result_container, #song_suggestions_container {\n"
 "	border-radius: 5px;\n"
 "	border: 1px solid #D0D0D0;\n"
 "}\n"
@@ -202,11 +202,11 @@ class Ui_MainWindow(object):
 "	background-color: white;\n"
 "	padding: 2px;\n"
 "	color: black;\n"
-"	border: none;\n"
+"	"
+                        "border: none;\n"
 "}\n"
 "\n"
-""
-                        "#settings_language_page QPushButton, \n"
+"#settings_language_page QPushButton, \n"
 "#settings_theme_page QPushButton {\n"
 "	border-radius: 5px;\n"
 "	background-color: #1e1e1e;\n"
@@ -242,8 +242,8 @@ class Ui_MainWindow(object):
 "\n"
 "/* generic page styles */\n"
 "/*\n"
-"#generic_page #generic_scroll"
-                        "area {\n"
+""
+                        "#generic_page #generic_scrollarea {\n"
 "	border-radius: 5px;\n"
 "	border: 1px solid #D0D0D0;\n"
 "}	\n"
@@ -562,11 +562,12 @@ class Ui_MainWindow(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.home_page_scrollarea.sizePolicy().hasHeightForWidth())
         self.home_page_scrollarea.setSizePolicy(sizePolicy1)
+        self.home_page_scrollarea.setFrameShape(QFrame.NoFrame)
         self.home_page_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.home_page_scrollarea.setWidgetResizable(True)
         self.home_page_scrollarea_contents = QWidget()
         self.home_page_scrollarea_contents.setObjectName(u"home_page_scrollarea_contents")
-        self.home_page_scrollarea_contents.setGeometry(QRect(0, 0, 820, 680))
+        self.home_page_scrollarea_contents.setGeometry(QRect(0, 0, 822, 710))
         sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
@@ -593,11 +594,12 @@ class Ui_MainWindow(object):
 
         self.recent_scrollarea = QScrollArea(self.recent_widget)
         self.recent_scrollarea.setObjectName(u"recent_scrollarea")
+        self.recent_scrollarea.setFrameShape(QFrame.NoFrame)
         self.recent_scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.recent_scrollarea.setWidgetResizable(True)
         self.recent_contents = QWidget()
         self.recent_contents.setObjectName(u"recent_contents")
-        self.recent_contents.setGeometry(QRect(0, 0, 782, 97))
+        self.recent_contents.setGeometry(QRect(0, 0, 786, 99))
         self.recent_scrollarea.setWidget(self.recent_contents)
 
         self.verticalLayout_4.addWidget(self.recent_scrollarea)
@@ -609,7 +611,7 @@ class Ui_MainWindow(object):
         self.recommend_widget.setObjectName(u"recommend_widget")
         sizePolicy2.setHeightForWidth(self.recommend_widget.sizePolicy().hasHeightForWidth())
         self.recommend_widget.setSizePolicy(sizePolicy2)
-        self.recommend_widget.setMinimumSize(QSize(0, 250))
+        self.recommend_widget.setMinimumSize(QSize(0, 265))
         self.verticalLayout_6 = QVBoxLayout(self.recommend_widget)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.recommend_label = QLabel(self.recommend_widget)
@@ -622,11 +624,12 @@ class Ui_MainWindow(object):
 
         self.recommend_scrollarea = QScrollArea(self.recommend_widget)
         self.recommend_scrollarea.setObjectName(u"recommend_scrollarea")
+        self.recommend_scrollarea.setFrameShape(QFrame.NoFrame)
         self.recommend_scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.recommend_scrollarea.setWidgetResizable(True)
         self.recommend_contents = QWidget()
         self.recommend_contents.setObjectName(u"recommend_contents")
-        self.recommend_contents.setGeometry(QRect(0, 0, 782, 201))
+        self.recommend_contents.setGeometry(QRect(0, 0, 786, 218))
         self.recommend_scrollarea.setWidget(self.recommend_contents)
 
         self.verticalLayout_6.addWidget(self.recommend_scrollarea)
@@ -638,7 +641,7 @@ class Ui_MainWindow(object):
         self.categories_widget.setObjectName(u"categories_widget")
         sizePolicy.setHeightForWidth(self.categories_widget.sizePolicy().hasHeightForWidth())
         self.categories_widget.setSizePolicy(sizePolicy)
-        self.categories_widget.setMinimumSize(QSize(0, 250))
+        self.categories_widget.setMinimumSize(QSize(0, 265))
         self.verticalLayout_7 = QVBoxLayout(self.categories_widget)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
         self.categories_label = QLabel(self.categories_widget)
@@ -651,11 +654,12 @@ class Ui_MainWindow(object):
 
         self.categories_scrollarea = QScrollArea(self.categories_widget)
         self.categories_scrollarea.setObjectName(u"categories_scrollarea")
+        self.categories_scrollarea.setFrameShape(QFrame.NoFrame)
         self.categories_scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.categories_scrollarea.setWidgetResizable(True)
         self.categories_contents = QWidget()
         self.categories_contents.setObjectName(u"categories_contents")
-        self.categories_contents.setGeometry(QRect(0, 0, 782, 201))
+        self.categories_contents.setGeometry(QRect(0, 0, 786, 218))
         self.categories_scrollarea.setWidget(self.categories_contents)
 
         self.verticalLayout_7.addWidget(self.categories_scrollarea)
@@ -676,14 +680,15 @@ class Ui_MainWindow(object):
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.browse_page_scrollarea = QScrollArea(self.browse_page)
         self.browse_page_scrollarea.setObjectName(u"browse_page_scrollarea")
+        self.browse_page_scrollarea.setFrameShape(QFrame.NoFrame)
         self.browse_page_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.browse_page_scrollarea.setWidgetResizable(True)
-        self.browse_page_scrollearea_contents = QWidget()
-        self.browse_page_scrollearea_contents.setObjectName(u"browse_page_scrollearea_contents")
-        self.browse_page_scrollearea_contents.setGeometry(QRect(0, 0, 820, 755))
-        self.verticalLayout_45 = QVBoxLayout(self.browse_page_scrollearea_contents)
+        self.browse_page_scrollarea_contents = QWidget()
+        self.browse_page_scrollarea_contents.setObjectName(u"browse_page_scrollarea_contents")
+        self.browse_page_scrollarea_contents.setGeometry(QRect(0, 0, 822, 757))
+        self.verticalLayout_45 = QVBoxLayout(self.browse_page_scrollarea_contents)
         self.verticalLayout_45.setObjectName(u"verticalLayout_45")
-        self.search_section = QWidget(self.browse_page_scrollearea_contents)
+        self.search_section = QWidget(self.browse_page_scrollarea_contents)
         self.search_section.setObjectName(u"search_section")
         sizePolicy2.setHeightForWidth(self.search_section.sizePolicy().hasHeightForWidth())
         self.search_section.setSizePolicy(sizePolicy2)
@@ -736,7 +741,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_45.addWidget(self.search_section)
 
-        self.recent_searches_section = QWidget(self.browse_page_scrollearea_contents)
+        self.recent_searches_section = QWidget(self.browse_page_scrollarea_contents)
         self.recent_searches_section.setObjectName(u"recent_searches_section")
         sizePolicy5 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
         sizePolicy5.setHorizontalStretch(0)
@@ -748,8 +753,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.recent_searches_label = QLabel(self.recent_searches_section)
         self.recent_searches_label.setObjectName(u"recent_searches_label")
-        sizePolicy2.setHeightForWidth(self.recent_searches_label.sizePolicy().hasHeightForWidth())
-        self.recent_searches_label.setSizePolicy(sizePolicy2)
+        sizePolicy5.setHeightForWidth(self.recent_searches_label.sizePolicy().hasHeightForWidth())
+        self.recent_searches_label.setSizePolicy(sizePolicy5)
         self.recent_searches_label.setFont(font1)
 
         self.verticalLayout_10.addWidget(self.recent_searches_label)
@@ -765,7 +770,7 @@ class Ui_MainWindow(object):
         self.no_recent_searches_label = QLabel(self.recent_searches_widget)
         self.no_recent_searches_label.setObjectName(u"no_recent_searches_label")
 
-        self.verticalLayout_8.addWidget(self.no_recent_searches_label)
+        self.verticalLayout_8.addWidget(self.no_recent_searches_label, 0, Qt.AlignTop)
 
 
         self.verticalLayout_10.addWidget(self.recent_searches_widget)
@@ -773,49 +778,168 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_45.addWidget(self.recent_searches_section)
 
-        self.song_result_label = QLabel(self.browse_page_scrollearea_contents)
+        self.result_section = QWidget(self.browse_page_scrollarea_contents)
+        self.result_section.setObjectName(u"result_section")
+        self.result_section.setEnabled(True)
+        sizePolicy2.setHeightForWidth(self.result_section.sizePolicy().hasHeightForWidth())
+        self.result_section.setSizePolicy(sizePolicy2)
+        self.verticalLayout_49 = QVBoxLayout(self.result_section)
+        self.verticalLayout_49.setObjectName(u"verticalLayout_49")
+        self.verticalLayout_49.setContentsMargins(0, 0, 0, 0)
+        self.song_result_section = QWidget(self.result_section)
+        self.song_result_section.setObjectName(u"song_result_section")
+        sizePolicy.setHeightForWidth(self.song_result_section.sizePolicy().hasHeightForWidth())
+        self.song_result_section.setSizePolicy(sizePolicy)
+        self.song_result_section.setMaximumSize(QSize(16777215, 530))
+        self.verticalLayout_47 = QVBoxLayout(self.song_result_section)
+        self.verticalLayout_47.setSpacing(6)
+        self.verticalLayout_47.setObjectName(u"verticalLayout_47")
+        self.verticalLayout_47.setContentsMargins(0, 0, 0, 0)
+        self.song_result_label = QLabel(self.song_result_section)
         self.song_result_label.setObjectName(u"song_result_label")
         sizePolicy2.setHeightForWidth(self.song_result_label.sizePolicy().hasHeightForWidth())
         self.song_result_label.setSizePolicy(sizePolicy2)
         self.song_result_label.setFont(font1)
 
-        self.verticalLayout_45.addWidget(self.song_result_label)
+        self.verticalLayout_47.addWidget(self.song_result_label)
 
-        self.song_result_scrollarea = QScrollArea(self.browse_page_scrollearea_contents)
+        self.song_result_container = QWidget(self.song_result_section)
+        self.song_result_container.setObjectName(u"song_result_container")
+        self.verticalLayout_50 = QVBoxLayout(self.song_result_container)
+        self.verticalLayout_50.setObjectName(u"verticalLayout_50")
+        self.no_songs_found_label = QLabel(self.song_result_container)
+        self.no_songs_found_label.setObjectName(u"no_songs_found_label")
+
+        self.verticalLayout_50.addWidget(self.no_songs_found_label)
+
+        self.song_result_scrollarea = QScrollArea(self.song_result_container)
         self.song_result_scrollarea.setObjectName(u"song_result_scrollarea")
-        self.song_result_scrollarea.setFrameShape(QFrame.Box)
+        sizePolicy1.setHeightForWidth(self.song_result_scrollarea.sizePolicy().hasHeightForWidth())
+        self.song_result_scrollarea.setSizePolicy(sizePolicy1)
+        self.song_result_scrollarea.setFrameShape(QFrame.NoFrame)
         self.song_result_scrollarea.setFrameShadow(QFrame.Plain)
         self.song_result_scrollarea.setLineWidth(0)
+        self.song_result_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.song_result_scrollarea.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
         self.song_result_scrollarea.setWidgetResizable(True)
         self.song_result_scrollarea_contents = QWidget()
         self.song_result_scrollarea_contents.setObjectName(u"song_result_scrollarea_contents")
-        self.song_result_scrollarea_contents.setGeometry(QRect(0, 0, 800, 258))
+        self.song_result_scrollarea_contents.setGeometry(QRect(0, 0, 786, 68))
+        sizePolicy.setHeightForWidth(self.song_result_scrollarea_contents.sizePolicy().hasHeightForWidth())
+        self.song_result_scrollarea_contents.setSizePolicy(sizePolicy)
         self.song_result_scrollarea.setWidget(self.song_result_scrollarea_contents)
 
-        self.verticalLayout_45.addWidget(self.song_result_scrollarea)
+        self.verticalLayout_50.addWidget(self.song_result_scrollarea)
 
-        self.album_result_label = QLabel(self.browse_page_scrollearea_contents)
+
+        self.verticalLayout_47.addWidget(self.song_result_container)
+
+
+        self.verticalLayout_49.addWidget(self.song_result_section)
+
+        self.album_result_section = QWidget(self.result_section)
+        self.album_result_section.setObjectName(u"album_result_section")
+        sizePolicy.setHeightForWidth(self.album_result_section.sizePolicy().hasHeightForWidth())
+        self.album_result_section.setSizePolicy(sizePolicy)
+        self.album_result_section.setMaximumSize(QSize(16777215, 530))
+        self.verticalLayout_48 = QVBoxLayout(self.album_result_section)
+        self.verticalLayout_48.setObjectName(u"verticalLayout_48")
+        self.verticalLayout_48.setContentsMargins(0, 0, 0, 0)
+        self.album_result_label = QLabel(self.album_result_section)
         self.album_result_label.setObjectName(u"album_result_label")
         sizePolicy2.setHeightForWidth(self.album_result_label.sizePolicy().hasHeightForWidth())
         self.album_result_label.setSizePolicy(sizePolicy2)
         self.album_result_label.setFont(font1)
 
-        self.verticalLayout_45.addWidget(self.album_result_label)
+        self.verticalLayout_48.addWidget(self.album_result_label)
 
-        self.album_result_scrollarea = QScrollArea(self.browse_page_scrollearea_contents)
+        self.album_result_container = QWidget(self.album_result_section)
+        self.album_result_container.setObjectName(u"album_result_container")
+        self.verticalLayout_51 = QVBoxLayout(self.album_result_container)
+        self.verticalLayout_51.setObjectName(u"verticalLayout_51")
+        self.no_albums_found_label = QLabel(self.album_result_container)
+        self.no_albums_found_label.setObjectName(u"no_albums_found_label")
+
+        self.verticalLayout_51.addWidget(self.no_albums_found_label)
+
+        self.album_result_scrollarea = QScrollArea(self.album_result_container)
         self.album_result_scrollarea.setObjectName(u"album_result_scrollarea")
-        self.album_result_scrollarea.setFrameShape(QFrame.Box)
+        sizePolicy1.setHeightForWidth(self.album_result_scrollarea.sizePolicy().hasHeightForWidth())
+        self.album_result_scrollarea.setSizePolicy(sizePolicy1)
+        self.album_result_scrollarea.setFrameShape(QFrame.NoFrame)
         self.album_result_scrollarea.setFrameShadow(QFrame.Plain)
         self.album_result_scrollarea.setLineWidth(0)
+        self.album_result_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.album_result_scrollarea.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
         self.album_result_scrollarea.setWidgetResizable(True)
         self.album_result_scrollarea_contents = QWidget()
         self.album_result_scrollarea_contents.setObjectName(u"album_result_scrollarea_contents")
-        self.album_result_scrollarea_contents.setGeometry(QRect(0, 0, 800, 257))
+        self.album_result_scrollarea_contents.setGeometry(QRect(0, 0, 786, 68))
+        sizePolicy.setHeightForWidth(self.album_result_scrollarea_contents.sizePolicy().hasHeightForWidth())
+        self.album_result_scrollarea_contents.setSizePolicy(sizePolicy)
         self.album_result_scrollarea.setWidget(self.album_result_scrollarea_contents)
 
-        self.verticalLayout_45.addWidget(self.album_result_scrollarea)
+        self.verticalLayout_51.addWidget(self.album_result_scrollarea)
 
-        self.browse_page_scrollarea.setWidget(self.browse_page_scrollearea_contents)
+
+        self.verticalLayout_48.addWidget(self.album_result_container)
+
+
+        self.verticalLayout_49.addWidget(self.album_result_section)
+
+
+        self.verticalLayout_45.addWidget(self.result_section)
+
+        self.song_suggestions_section = QWidget(self.browse_page_scrollarea_contents)
+        self.song_suggestions_section.setObjectName(u"song_suggestions_section")
+        sizePolicy.setHeightForWidth(self.song_suggestions_section.sizePolicy().hasHeightForWidth())
+        self.song_suggestions_section.setSizePolicy(sizePolicy)
+        self.song_suggestions_section.setMaximumSize(QSize(16777215, 530))
+        self.verticalLayout_52 = QVBoxLayout(self.song_suggestions_section)
+        self.verticalLayout_52.setObjectName(u"verticalLayout_52")
+        self.verticalLayout_52.setContentsMargins(0, 0, 0, 0)
+        self.song_suggestions_label = QLabel(self.song_suggestions_section)
+        self.song_suggestions_label.setObjectName(u"song_suggestions_label")
+        sizePolicy2.setHeightForWidth(self.song_suggestions_label.sizePolicy().hasHeightForWidth())
+        self.song_suggestions_label.setSizePolicy(sizePolicy2)
+        self.song_suggestions_label.setFont(font1)
+
+        self.verticalLayout_52.addWidget(self.song_suggestions_label)
+
+        self.song_suggestions_container = QWidget(self.song_suggestions_section)
+        self.song_suggestions_container.setObjectName(u"song_suggestions_container")
+        self.verticalLayout_53 = QVBoxLayout(self.song_suggestions_container)
+        self.verticalLayout_53.setObjectName(u"verticalLayout_53")
+        self.song_suggestions_scrollarea = QScrollArea(self.song_suggestions_container)
+        self.song_suggestions_scrollarea.setObjectName(u"song_suggestions_scrollarea")
+        sizePolicy1.setHeightForWidth(self.song_suggestions_scrollarea.sizePolicy().hasHeightForWidth())
+        self.song_suggestions_scrollarea.setSizePolicy(sizePolicy1)
+        self.song_suggestions_scrollarea.setFrameShape(QFrame.NoFrame)
+        self.song_suggestions_scrollarea.setFrameShadow(QFrame.Plain)
+        self.song_suggestions_scrollarea.setLineWidth(0)
+        self.song_suggestions_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.song_suggestions_scrollarea.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
+        self.song_suggestions_scrollarea.setWidgetResizable(True)
+        self.song_suggestions_scrollarea_contents = QWidget()
+        self.song_suggestions_scrollarea_contents.setObjectName(u"song_suggestions_scrollarea_contents")
+        self.song_suggestions_scrollarea_contents.setGeometry(QRect(0, 0, 786, 99))
+        sizePolicy.setHeightForWidth(self.song_suggestions_scrollarea_contents.sizePolicy().hasHeightForWidth())
+        self.song_suggestions_scrollarea_contents.setSizePolicy(sizePolicy)
+        self.song_suggestions_scrollarea.setWidget(self.song_suggestions_scrollarea_contents)
+
+        self.verticalLayout_53.addWidget(self.song_suggestions_scrollarea)
+
+
+        self.verticalLayout_52.addWidget(self.song_suggestions_container)
+
+
+        self.verticalLayout_45.addWidget(self.song_suggestions_section)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_45.addItem(self.verticalSpacer_2)
+
+        self.browse_page_scrollarea.setWidget(self.browse_page_scrollarea_contents)
 
         self.verticalLayout_11.addWidget(self.browse_page_scrollarea)
 
@@ -852,10 +976,11 @@ class Ui_MainWindow(object):
 
         self.library_page_scrollarea = QScrollArea(self.library_page)
         self.library_page_scrollarea.setObjectName(u"library_page_scrollarea")
+        self.library_page_scrollarea.setFrameShape(QFrame.NoFrame)
         self.library_page_scrollarea.setWidgetResizable(True)
         self.library_page_scrollarea_contents = QWidget()
         self.library_page_scrollarea_contents.setObjectName(u"library_page_scrollarea_contents")
-        self.library_page_scrollarea_contents.setGeometry(QRect(0, 0, 163, 41))
+        self.library_page_scrollarea_contents.setGeometry(QRect(0, 0, 822, 698))
         self.verticalLayout_13 = QVBoxLayout(self.library_page_scrollarea_contents)
         self.verticalLayout_13.setObjectName(u"verticalLayout_13")
         self.library_contents = QWidget(self.library_page_scrollarea_contents)
@@ -902,10 +1027,11 @@ class Ui_MainWindow(object):
 
         self.profile_page_scrollarea = QScrollArea(self.profile_page)
         self.profile_page_scrollarea.setObjectName(u"profile_page_scrollarea")
+        self.profile_page_scrollarea.setFrameShape(QFrame.NoFrame)
         self.profile_page_scrollarea.setWidgetResizable(True)
         self.profile_page_scrollarea_contents = QWidget()
         self.profile_page_scrollarea_contents.setObjectName(u"profile_page_scrollarea_contents")
-        self.profile_page_scrollarea_contents.setGeometry(QRect(0, 0, 820, 708))
+        self.profile_page_scrollarea_contents.setGeometry(QRect(0, 0, 822, 710))
         self.verticalLayout_15 = QVBoxLayout(self.profile_page_scrollarea_contents)
         self.verticalLayout_15.setSpacing(12)
         self.verticalLayout_15.setObjectName(u"verticalLayout_15")
@@ -1045,6 +1171,7 @@ class Ui_MainWindow(object):
 
         self.playlist_contents_scrollarea = QScrollArea(self.playlist_contents_widget)
         self.playlist_contents_scrollarea.setObjectName(u"playlist_contents_scrollarea")
+        self.playlist_contents_scrollarea.setFrameShape(QFrame.NoFrame)
         self.playlist_contents_scrollarea.setWidgetResizable(True)
         self.playlist_contents_scrollarea_contents = QWidget()
         self.playlist_contents_scrollarea_contents.setObjectName(u"playlist_contents_scrollarea_contents")
@@ -1104,7 +1231,7 @@ class Ui_MainWindow(object):
         self.about_page_scrollArea.setWidgetResizable(True)
         self.about_content = QWidget()
         self.about_content.setObjectName(u"about_content")
-        self.about_content.setGeometry(QRect(0, 0, 319, 406))
+        self.about_content.setGeometry(QRect(0, 0, 804, 710))
         self.verticalLayout_42 = QVBoxLayout(self.about_content)
         self.verticalLayout_42.setObjectName(u"verticalLayout_42")
         self.about_us_label = QLabel(self.about_content)
@@ -1215,7 +1342,6 @@ class Ui_MainWindow(object):
 
         self.language_comboBox = QComboBox(self.langauge_content)
         self.language_comboBox.addItem("")
-        self.language_comboBox.addItem("")
         self.language_comboBox.setObjectName(u"language_comboBox")
         self.language_comboBox.setFont(font6)
         self.language_comboBox.setCursor(QCursor(Qt.ArrowCursor))
@@ -1276,7 +1402,7 @@ class Ui_MainWindow(object):
         self.theme_scrollArea.setWidgetResizable(True)
         self.settings_theme_widget = QWidget()
         self.settings_theme_widget.setObjectName(u"settings_theme_widget")
-        self.settings_theme_widget.setGeometry(QRect(0, 0, 231, 124))
+        self.settings_theme_widget.setGeometry(QRect(0, 0, 804, 326))
         self.verticalLayout_39 = QVBoxLayout(self.settings_theme_widget)
         self.verticalLayout_39.setObjectName(u"verticalLayout_39")
         self.settings_theme_content_2 = QWidget(self.settings_theme_widget)
@@ -1299,18 +1425,6 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_39.addWidget(self.settings_theme_content_2)
-
-        self.theme_preview_label = QLabel(self.settings_theme_widget)
-        self.theme_preview_label.setObjectName(u"theme_preview_label")
-        self.theme_preview_label.setFont(font6)
-        self.theme_preview_label.setMargin(9)
-
-        self.verticalLayout_39.addWidget(self.theme_preview_label)
-
-        self.theme_preview_content = QWidget(self.settings_theme_widget)
-        self.theme_preview_content.setObjectName(u"theme_preview_content")
-
-        self.verticalLayout_39.addWidget(self.theme_preview_content)
 
         self.verticalSpacer_12 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -1705,16 +1819,6 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_9.addWidget(self.player_page_playlist_label)
 
-        self.share_button = QToolButton(self.player_page_header)
-        self.share_button.setObjectName(u"share_button")
-        self.share_button.setCursor(QCursor(Qt.PointingHandCursor))
-        icon18 = QIcon()
-        icon18.addFile(u":/resources/assets/images/share.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.share_button.setIcon(icon18)
-        self.share_button.setIconSize(QSize(32, 32))
-
-        self.horizontalLayout_9.addWidget(self.share_button)
-
 
         self.verticalLayout_22.addWidget(self.player_page_header)
 
@@ -1897,9 +2001,9 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(3)
         self.home_button.setDefault(False)
-        self.pages_widget.setCurrentIndex(4)
+        self.pages_widget.setCurrentIndex(7)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1934,7 +2038,10 @@ class Ui_MainWindow(object):
         self.recent_searches_label.setText(QCoreApplication.translate("MainWindow", u"Recent Searches", None))
         self.no_recent_searches_label.setText(QCoreApplication.translate("MainWindow", u"You have no recent searches.", None))
         self.song_result_label.setText(QCoreApplication.translate("MainWindow", u"Songs", None))
+        self.no_songs_found_label.setText(QCoreApplication.translate("MainWindow", u"No songs were found.", None))
         self.album_result_label.setText(QCoreApplication.translate("MainWindow", u"Albums", None))
+        self.no_albums_found_label.setText(QCoreApplication.translate("MainWindow", u"No albums were found.", None))
+        self.song_suggestions_label.setText(QCoreApplication.translate("MainWindow", u"You might like", None))
         self.library_title_label.setText(QCoreApplication.translate("MainWindow", u"Your Library", None))
         self.add_playlist_button.setText("")
         self.no_playlists_label.setText(QCoreApplication.translate("MainWindow", u"You have no playlists.", None))
@@ -1957,14 +2064,12 @@ class Ui_MainWindow(object):
         self.apply_language_button.setText(QCoreApplication.translate("MainWindow", u"Apply", None))
         self.language_label.setText(QCoreApplication.translate("MainWindow", u"Choose Your Language", None))
         self.language_comboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"English (US)", None))
-        self.language_comboBox.setItemText(1, QCoreApplication.translate("MainWindow", u"Thai", None))
 
         self.settings_theme_page_label.setText(QCoreApplication.translate("MainWindow", u"Theme", None))
         self.apply_theme_button.setText(QCoreApplication.translate("MainWindow", u"Apply", None))
         self.current_theme_label.setText(QCoreApplication.translate("MainWindow", u"Theme Options", None))
         self.theme_comboBox_.setItemText(0, QCoreApplication.translate("MainWindow", u"Default", None))
 
-        self.theme_preview_label.setText(QCoreApplication.translate("MainWindow", u"Preview", None))
         self.generic_title.setText(QCoreApplication.translate("MainWindow", u"Untitled Page", None))
         self.login_page_label.setText(QCoreApplication.translate("MainWindow", u"Log In", None))
         self.login_email_label.setText(QCoreApplication.translate("MainWindow", u"Email", None))
@@ -1984,7 +2089,6 @@ class Ui_MainWindow(object):
         self.sign_in_button.setText(QCoreApplication.translate("MainWindow", u"Click here to Log in", None))
         self.player_page_back_button.setText("")
         self.player_page_playlist_label.setText(QCoreApplication.translate("MainWindow", u"Playlist Name", None))
-        self.share_button.setText("")
         self.player_page_thumbnail.setText("")
         self.player_page_song_label.setText(QCoreApplication.translate("MainWindow", u"Song Title", None))
         self.player_page_artist_label.setText(QCoreApplication.translate("MainWindow", u"Artist Name", None))

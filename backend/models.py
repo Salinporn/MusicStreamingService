@@ -1,3 +1,4 @@
+from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import QByteArray
 from PySide6.QtGui import QPixmap
 
@@ -6,8 +7,8 @@ class User:
         self.uuid: str = uuid
         self.name: str = name
         self.email: str = email
-        self.playlists: list[Playlist] = playlists
-        self.recently_played: list[Playlist] = recently_played
+        self.playlists: list[str] = playlists
+        self.recently_played: list[str] = recently_played
     
     def get_uuid(self) -> str:
         return self.uuid
@@ -18,19 +19,19 @@ class User:
     def get_email(self) -> str:
         return self.email
     
-    def get_playlists(self) -> list["Playlist"]:
+    def get_playlists(self) -> list[str]:
         return self.playlists
     
-    def get_recently_played(self) -> list["Playlist"]:
+    def get_recently_played(self) -> list[str]:
         return self.recently_played
 
 class Playlist:
-    def __init__(self, uuid, name, author, songs, image=None) -> None:
-        self.uuid = uuid
-        self.name = name
-        self.author = author
-        self.image = image
-        self.songs = songs
+    def __init__(self, uuid, name, author, songs=None, image=None) -> None:
+        self.uuid: str = uuid
+        self.name: str = name
+        self.author: str = author
+        self.image: QPixmap = image
+        self.songs: list[str] = songs if songs else []
     
     def get_uuid(self):
         return self.uuid
@@ -53,14 +54,30 @@ class Playlist:
     
     def add_song(self, song):
         self.songs.append(song)
+    
+    def remove_song(self, song):
+        self.songs.remove(song)
+
+    def move_song_up(self, song_id):
+        index = self.songs.index(song_id)
+        if index != 0:
+            self.songs[index], self.songs[index-1] = self.songs[index-1], self.songs[index]
+
+    def move_song_down(self, song_id):
+        index = self.songs.index(song_id)
+        if index != len(self.songs)-1:
+            self.songs[index], self.songs[index+1] = self.songs[index+1], self.songs[index]
 
 class Song:
-    def __init__(self, uuid: str, title: str, artists: list[str], duration: float, image: QPixmap = None):
-        self.uuid = uuid
-        self.title = title
-        self.artists = artists
-        self.duration = duration
-        self.image = image
+    def __init__(self, uuid, title, artists, album, duration, image = None):
+        self.uuid: str = uuid
+        self.title: str = title
+        self.artists: list[str] = artists
+        self.album: str = album
+        self.duration: float = duration
+        self.image: QPixmap = image
+        
+        self.observers: list[QWidget] = []
 
     def get_uuid(self) -> str:
         return self.uuid
@@ -73,14 +90,46 @@ class Song:
     
     def set_image(self, image):
         self.image = image
+        
+        for observer in self.observers:
+            observer.update_image()
     
-class Category:
-    def __init__(self, uuid: str, name: str, color:str, songs: list[str], image: QByteArray):
-        self.uuid = uuid
-        self.name = name
-        self.color = color
-        self.songs = songs
+    def add_observer(self, observer):
+        self.observers.append(observer)
+
+class Album:
+    def __init__(self, uuid, title, artists, songs, image=None):
+        self.uuid: str = uuid
+        self.title: str = title
+        self.artists: list[str] = artists
+        self.songs: list[str] = songs
+        self.image: QPixmap = image
+
+    def get_uuid(self) -> str:
+        return self.uuid
+
+    def get_title(self) -> str:
+        return self.title
+
+    def get_artists(self) -> list[str]:
+        return self.artists
+
+    def get_songs(self) -> list[str]:
+        return self.songs
+    
+    def get_image(self) -> QPixmap:
+        return self.image
+
+    def set_image(self, image):
         self.image = image
+
+class Category:
+    def __init__(self, uuid, name, color, songs, image):
+        self.uuid: str = uuid
+        self.name: str = name
+        self.color: str = color
+        self.songs: list[str] = songs
+        self.image: QByteArray = image
         
     def get_songs(self):
         return self.songs

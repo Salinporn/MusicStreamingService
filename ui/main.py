@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import (
-    QWidget, QMainWindow, QApplication,
-    QHBoxLayout, QVBoxLayout, QGridLayout, QSizePolicy,
+    QWidget, QMainWindow, QApplication, QDialog,
+    QHBoxLayout, QVBoxLayout, QGridLayout, QSizePolicy, QLayout,
     QPushButton, QToolButton, QMenu, QLineEdit, QFileDialog,
-    QLabel)
+    QLabel, QMessageBox)
 from PySide6.QtGui import (QIcon, QCursor, QRegion, QMouseEvent, QPixmap, QImage, QAction)
 from PySide6.QtCore import (
     QObject, Qt, QSize, QUrl, QEventLoop, QUrlQuery, QTemporaryFile, QCoreApplication,
@@ -56,6 +56,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setup_login()
         self.setup_register()
 
+    def clear_widget(self, widget: QWidget):
+        for i in reversed(range(widget.layout().count())): 
+            widget.layout().itemAt(i).widget().setParent(None)
+
     # ----------------
     # -- NETWORKING --
     # ----------------
@@ -70,20 +74,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def perform_get_request_sync(self, url: str, data: dict=None, headers: dict=None) -> QNetworkReply:
         request_url = QUrl(url)
         request_url.setPort(self.SERVER_PORT)
-
-        request = QNetworkRequest(request_url)
-        request.setSslConfiguration(self.ssl_config)
-        
-        if headers:
-            for key, value in headers.items():
-                request.setHeader(key, value)
         
         if data is not None:
             query_params = QUrlQuery()
             for key, value in data.items():
                 query_params.addQueryItem(key, value)
-            request_url.setQuery(query_params)
-        
+            request_url.setQuery(query_params.query())
+
+        request = QNetworkRequest(request_url)
+        if headers:
+            for key, value in headers.items():
+                request.setHeader(key, value)
+
+        request.setSslConfiguration(self.ssl_config)
+                
         reply = self.network_manager.get(request)
         
         # wait for reply...
@@ -130,8 +134,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def check_reply_for_errors(self, reply: QNetworkReply):
         err = reply.error()
         if err == QNetworkReply.NetworkError.AuthenticationRequiredError:
-            # todo: handle incorrect credentials or expired session
-            ...
+            print("Session cookie invalid, logging out...")
+            self.handle_logout()
         elif err != QNetworkReply.NetworkError.NoError:
             print(f"Error: {err}")
             print(reply.errorString())
@@ -201,7 +205,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # if we have a saved session cookie, use it
         self.settings.beginGroup("Authentication")
-        
+
         loaded_cookies = QNetworkCookie.parseCookies(self.settings.value("session"))
         
         if loaded_cookies:
@@ -212,17 +216,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print(time_to_expiry)
             if time_to_expiry <= 0:
                 self.settings.setValue("session", None)
+                self.session = None
             else:
                 # add session cookie to cookie jar
                 self.network_manager.cookieJar().insertCookie(self.session)
+                self.settings.endGroup()
                 
-                # FIXME: check first if the cookie is valid
                 self.on_authenticated()
         
         if not self.session:
+            self.settings.endGroup()
             self.stackedWidget.setCurrentWidget(self.login_page)
-
-        self.settings.endGroup()
 
     def handle_login(self):
         data = {
@@ -246,14 +250,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             self.session = session_cookie
             
-            # store cookie with persistence
+            # store cookie with persistence            
             self.settings.beginGroup("Authentication")
-            self.settings.setValue("session", cookie.toRawForm())
+            self.settings.setValue("session", session_cookie.toRawForm())
             self.settings.endGroup()
 
             self.on_authenticated()
         else:
-            # todo: incorrect credentials??
             pass
         
         self.login_email_input.clear()
@@ -268,6 +271,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.settings.beginGroup("Authentication")
         self.settings.setValue("session", None)
         self.settings.endGroup()
+        
+        self.settings.sync()
         
         # restart app
         QCoreApplication.quit()
@@ -291,6 +296,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return pixmap
     
     ALBUM_IMAGE_ENDPOINT = "get-album-image/"
+    ALBUMS_ENDPOINT = "get-album/"
     def load_song(self, song_id):
         # load data and image
         
@@ -301,60 +307,96 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         song_data = song_reply.readAll()
         response_json = QJsonDocument.fromJson(song_data).object()
 
+        """
+        response_json:
+            uuid
+            title
+            genres
+            artists
+            album
+            duration
+        """
+        if not response_json:
+            return
+        
         song = Song(
             uuid=response_json["uuid"],
             title=response_json["title"],
             artists=response_json["artists"],
+            album=response_json["album"],
             duration=response_json["duration"]
         )
+        
+        self.songs[song_id] = song
         
         if response_json["album"] is None:
             # load placeholder image
             image = QPixmap(":/resources/assets/images/song_placeholder.jpg")
+            song.set_image(image)
         else:
             # load album image
-            
-            album_image_reply = self.perform_get_request_sync(
-                url=self.SERVER_URL + self.ALBUM_IMAGE_ENDPOINT + response_json["album"],
-                data=None
-            )
-            image_data = album_image_reply.readAll()
-            image = self.data_to_pixmap(image_data)
-
-        song.set_image(image)
-        
+            if response_json["album"] not in self.albums:
+                self.load_album(response_json["album"])
+                
         return song
+    
+    def load_album(self, album_id):
+        album_reply = self.perform_get_request_sync(
+            url=self.SERVER_URL + self.ALBUMS_ENDPOINT + album_id,
+            data=None
+        )
+        album_data = album_reply.readAll()
+        response_json = QJsonDocument.fromJson(album_data).object()
+
+        """
+        response_json:
+            uuid
+            title
+            artists
+            songs
+        """
+
+        album = Album(
+            uuid=response_json["uuid"],
+            title=response_json["title"],
+            artists=response_json["artists"],
+            songs=response_json["songs"]
+        )
+        
+        for song_id in response_json["songs"]:
+            if song_id not in self.songs:
+                self.load_song(song_id)
+        
+        self.albums[album_id] = album
+        
+        # load album image
+        album_image_reply = self.perform_get_request_sync(
+            url=self.SERVER_URL + self.ALBUM_IMAGE_ENDPOINT + album_id,
+            data=None
+        )
+        
+    # def load_album_image(self, album_image_reply: QNetworkReply, album: Album):
+        image_data = album_image_reply.readAll()
+        image = self.data_to_pixmap(image_data)
+        
+        album.set_image(image)
+        
+        for song_id in album.get_songs():
+            self.songs[song_id].set_image(image)
+    
+        return album
     
     CATEGORIES_ENDPOINT = "get-categories/"
     SONGS_ENDPOINT = "get-songs/"
     PLAYLIST_IMAGE_ENDPOINT = "get-playlist-image/"
+    RECOMMENDED_SONGS_ENDPOINT = "get-recommended/"
     def load_home_page(self):
         self.pages_widget.setCurrentIndex(0)
         
-        reply = self.perform_get_request_sync(self.SERVER_URL + self.CATEGORIES_ENDPOINT)
-        response_data = reply.readAll()
-        response_json = QJsonDocument.fromJson(response_data).object()
-
         self.recommend_contents.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.categories_contents.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
         
-        categories = response_json["data"]
-        
-        for category in categories:
-            image_reply = self.perform_get_request_sync(self.SERVER_URL + self.CATEGORIES_ENDPOINT + category["uuid"], None)
-            image_data = image_reply.readAll()
-        
-            category["image"] = self.data_to_pixmap(image_data)
-
-            for song in category["songs"]:
-                if song not in self.songs:
-                    self.songs[song] = self.load_song(song)
-
-            category = Category(**category)
-            self.categories_contents.layout().addWidget(
-                CategoryItem(category, self)
-            )
-        
+        # recently played
         recently_played = self.user.get_recently_played()
 
         if len(recently_played) > 6:
@@ -365,16 +407,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.recent_contents.layout().addWidget(
                 SmallPlaylistItem(playlist_obj, self)
             )
+            
+        # recommended songs
+        reply = self.perform_get_request_sync(self.SERVER_URL + self.RECOMMENDED_SONGS_ENDPOINT)
+        response_data = reply.readAll()
+        response_json = QJsonDocument.fromJson(response_data).object()
 
-        # -- TEST --        
-        # self.categories = [
-        #     Category("Pop Music",  "#87CEEB", ":resources/assets/images/pop_music.jpg"),
-        #     Category("Rock", "#DC143C", ":resources/assets/images/rock.jpg"),
-        #     Category("Hip Hop", "#7FFF00", ":resources/assets/images/hiphop.png"),
-        #     Category("Jazz", "#FFC0CB", ":resources/assets/images/jazz.png"),
-        #     Category("Country Music", "#FFA500", ":resources/assets/images/country.jpg")
-        # ]
-    
+        recommended_songs = response_json["results"]
+        
+        for song_id in recommended_songs:
+            if song_id not in self.songs:
+                self.load_song(song_id)
+            
+            self.recommend_contents.layout().addWidget(
+                BigSongItem(self.songs[song_id], parent=self)
+            )
+
+        # categories
+        reply = self.perform_get_request_sync(self.SERVER_URL + self.CATEGORIES_ENDPOINT)
+        response_data = reply.readAll()
+        response_json = QJsonDocument.fromJson(response_data).object()
+
+        categories = response_json["data"]
+        
+        for category in categories:
+            image_reply = self.perform_get_request_sync(self.SERVER_URL + self.CATEGORIES_ENDPOINT + category["uuid"], None)
+            image_data = image_reply.readAll()
+        
+            category["image"] = self.data_to_pixmap(image_data)
+
+            for song in category["songs"]:
+                if song not in self.songs:
+                    self.load_song(song)
+
+            category = Category(**category)
+            self.categories_contents.layout().addWidget(
+                CategoryItem(category, self)
+            )
+        
     def update_home_page(self):
         self.clear_home_page()
         
@@ -389,10 +459,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.recent_contents.layout().addWidget(
                 SmallPlaylistItem(playlist_obj, self)
             )
-    
+        
+        # update recommended songs
+        reply = self.perform_get_request_sync(self.SERVER_URL + self.RECOMMENDED_SONGS_ENDPOINT)
+        response_data = reply.readAll()
+        response_json = QJsonDocument.fromJson(response_data).object()
+
+        recommended_songs = response_json["results"]
+        
+        for song_id in recommended_songs:
+            if song_id not in self.songs:
+                self.load_song(song_id)
+            
+            self.recommend_contents.layout().addWidget(
+                BigSongItem(self.songs[song_id], parent=self)
+            )
+
     def clear_home_page(self):
-        for i in reversed(range(self.recent_contents.layout().count())): 
-            self.recent_contents.layout().itemAt(i).widget().setParent(None)
+        self.clear_widget(self.recent_contents)
+        self.clear_widget(self.recommend_contents)
                 
     def on_authenticated(self):
         # authenticated successfully, now use session cookie to get info
@@ -402,6 +487,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.songs: dict[str, Song] = {}
         self.playlists: dict[str, Playlist] = {}
         self.categories: dict[str, Category] = {}
+        self.albums: dict[str, Album] = {}
         
         playlists = []
         for playlist in user_data["playlists"]:
@@ -431,7 +517,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         recently_played = []
         for playlist in user_data["recently_played"]:
-            recently_played.append(playlist["uuid"])
+            if playlist["uuid"] not in recently_played:
+                recently_played.append(playlist["uuid"])
             
         self.user = User(
             uuid=user_data["uuid"],
@@ -469,7 +556,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         response_json = QJsonDocument.fromJson(response_data).object()
 
         if reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute) == 200:
-            # todo: maybe have a message that says registered successfully?
             self.stackedWidget.setCurrentWidget(self.login_page)
         
         self.register_button.setDisabled(False)
@@ -490,10 +576,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def setup_browse_page(self):
         self.search_button.clicked.connect(self.search)
         self.recent_searches = []
+        
+        self.song_result_scrollarea_contents.setLayout(FlowLayout())
+        self.album_result_scrollarea_contents.setLayout(FlowLayout())
+        self.song_suggestions_scrollarea_contents.setLayout(FlowLayout())
+        
+        self.song_suggestions_section.hide()
 
-    # ------------
-    # -- SEARCH --
-    # ------------
     SEARCH_ENDPOINT = "search"
     def search_query(self, query):
         
@@ -503,15 +592,115 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         reply_json = QJsonDocument.fromJson(reply_data).object()
         
         return reply_json
+        
+    def perform_search_query(self, query):
+        reply_json = self.search_query(query)
+        
+        results = reply_json["results"]
+        suggestions = reply_json["suggestions"]
+        
+        """
+        results:
+            album
+            artists
+            title
+            uuid
+        """
+        
+        self.display_search_results(results, suggestions)
+        
+    def display_search_results(self, results: list[dict[str]], suggestions: list[dict[str]]):
+        self.clear_search_results()
 
-    def search(self):
+        song_ids: list[str] = []
+        album_ids: list[str] = []
+        for result in results:
+            song_uuid = result["uuid"]
+            if song_uuid not in song_ids:
+                song_ids.append(song_uuid)
+            if "album" in result:
+                album_uuid = result["album"]
+                if album_uuid not in album_ids:
+                    album_ids.append(album_uuid)
+        
+        suggested_song_ids: list[str] = []
+        for suggested_song in suggestions:
+            song_uuid = suggested_song["uuid"]
+            if song_uuid not in suggested_song_ids:
+                suggested_song_ids.append(song_uuid)
+        
+        for song_id in song_ids:
+            if song_id not in self.songs:
+                self.load_song(song_uuid)
+            self.add_song_result(song_id)
+
+        for album_id in album_ids:
+            if album_id not in self.albums:
+                self.load_album(album_id)
+            self.add_album_result(album_id)
+        
+        for song_id in suggested_song_ids:
+            if song_id not in self.songs:
+                self.load_song(song_uuid)
+            self.add_suggested_song_result(song_id)
+        
+        self.no_songs_found_label.hide()
+        if len(song_ids) > 5:
+            self.song_result_container.setFixedHeight(440)
+        elif len(song_ids) >= 1:
+            self.song_result_container.setFixedHeight(220)
+        else:
+            self.song_result_container.setFixedHeight(100)            
+            self.no_songs_found_label.show()
+        
+        self.no_albums_found_label.hide()
+        if len(album_ids) > 5:
+            self.album_result_container.setFixedHeight(440)
+        elif len(album_ids) >= 1:
+            self.album_result_container.setFixedHeight(220)
+        else:
+            self.album_result_container.setFixedHeight(100)
+            self.no_albums_found_label.show()
+        
+        self.song_suggestions_section.show()
+        if len(suggested_song_ids) > 5:
+            self.song_suggestions_container.setFixedHeight(440)
+        elif len(album_ids) >= 1:
+            self.song_suggestions_container.setFixedHeight(220)
+        else:
+            self.song_suggestions_section.hide()
+            
+    def add_song_result(self, song_id: str):
+        layout = self.song_result_scrollarea_contents.layout()
+
+        song = self.songs[song_id]
+        layout.addWidget(BigSongItem(song, self))
+
+    def add_album_result(self, album_id: str):
+        layout = self.album_result_scrollarea_contents.layout()
+
+        album = self.albums[album_id]
+        layout.addWidget(AlbumItem(album, self))
+            
+    def add_suggested_song_result(self, song_id: str):
+        layout = self.song_suggestions_scrollarea_contents.layout()
+
+        song = self.songs[song_id]
+        layout.addWidget(BigSongItem(song, self))
+        
+    def search(self):        
         query = self.search_bar.text()
         
-        result = self.search_query(query)
+        # self.result_section.show()
         
-        # todo: display results
+        self.perform_search_query(query)
         
         self.add_recent_search(query)
+
+    def clear_search_results(self):
+        self.clear_widget(self.song_result_scrollarea_contents)
+        self.clear_widget(self.album_result_scrollarea_contents)
+        self.clear_widget(self.song_suggestions_scrollarea_contents)
 
     def add_recent_search(self, query: str):
         if len(self.recent_searches) == 0:
@@ -549,14 +738,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         reply_data = reply.readAll()
         reply_json = QJsonDocument.fromJson(reply_data).object()
+
+        playlist = Playlist(reply_json["uuid"], reply_json["name"], self.user.get_name(), None, QPixmap(":/resources/assets/images/playlist_placeholder.png"))
         
-        self.add_playlist(Playlist(reply_json["uuid"], reply_json["name"], self.user.get_name(), QPixmap(":/resources/assets/images/playlist_placeholder.jpg")))
+        self.user.playlists.append(reply_json["uuid"])
+        self.playlists[reply_json["uuid"]] = playlist
+        self.add_playlist(playlist)
 
     def add_playlist(self, playlist: Playlist):
         if len(self.library_playlists) == 0:
             self.no_playlists_label.hide()
         
-        item = SmallPlaylistItem(playlist, self)
+        item = LibraryItem(playlist=playlist, parent=self)
 
         self.library_playlists.append(item)
         self.library_contents.layout().addWidget(item)
@@ -607,9 +800,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
         )
 
-    def open_page_with_back_button(self, page: QWidget):
-        previous_page = self.pages_widget.currentWidget()
-        
+    def open_page_with_back_button(self, page: QWidget, previous_page: QWidget=None):
+        if previous_page is None:
+            previous_page = self.pages_widget.currentWidget()
+            
         self.pages_widget.setCurrentWidget(page)
         
         back_button = QToolButton(page)
@@ -626,7 +820,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # --------------
     def setup_settings(self):
         self.settings = QSettings()
-        # todo: implement settings
 
     # ------------
     # -- PLAYER --
@@ -668,18 +861,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sidebar_player_shuffle_button.clicked.connect(self.toggle_shuffle)
         self.player_page_shuffle_button.clicked.connect(self.toggle_shuffle)
 
-        shuffle_on = self.settings.value("shuffle")        
+        shuffle_on: str = self.settings.value("shuffle")
         if shuffle_on:
-            self.is_shuffle_on = bool(shuffle_on)
+            self.is_shuffle_on = bool(shuffle_on.title())
+            self.sidebar_player_shuffle_button.setChecked(self.is_shuffle_on)
+            self.player_page_shuffle_button.setChecked(self.is_shuffle_on)
 
         # loop
         self.sidebar_player_loop_button.clicked.connect(self.toggle_loop)
         self.player_page_loop_button.clicked.connect(self.toggle_loop)
 
-        loop_on = self.settings.value("loop")
+        loop_on: str = self.settings.value("loop")
+        print(loop_on)
         if loop_on:
-            self.is_loop_on = bool(loop_on)
-
+            self.is_loop_on = bool(loop_on.title())
+            self.sidebar_player_loop_button.setChecked(self.is_shuffle_on)
+            self.player_page_loop_button.setChecked(self.is_shuffle_on)
+            
         # volume
         slider_pos = self.settings.value("volume")
         
@@ -783,13 +981,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.player_page_play_pause_button.setCheckable(True)
         
         # set audio source
-        # self.audio_source_url = QUrl(self.SERVER_URL + self.AUDIO_ENDPOINT + song.get_uuid())
-        # self.audio_source_url.setPort(self.SERVER_PORT)
-        
         self.player_slider.setDisabled(False)
         self.player_page_slider.setDisabled(False)
         
-        # fixme: this works but it's very slow; make async?
+        # FIXME: this works but it's very slow; make async?
         reply = self.perform_get_request_sync(self.SERVER_URL + self.AUDIO_ENDPOINT + song.get_uuid())
         audio_data = reply.readAll()
         
@@ -802,11 +997,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.media_player.setSource(new_url)
         
-        # self.media_player.setSource(self.audio_source_url)
-        
         # set player ui to song info
         self.player_song_label.setText(song.title)
-        self.player_artist_label.setText(song.artists[0]) # FIXME: right now only supports one artist
+        self.player_artist_label.setText(", ".join(song.artists))
 
         self.player_thumbnail.setIcon(QIcon(song.image))
         self.player_page_thumbnail.setPixmap(song.image.scaled(350, 350))
@@ -814,7 +1007,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_duration_text(song.get_duration())
 
     ADD_RECENTLY_PLAYED_ENDPOINT = "add-recently-played/"
-    def play_playlist(self, playlist: Playlist, start_index=0):
+    def play_playlist(self, playlist: Playlist, start_index=0, add_to_recent=True):
         if len(playlist.get_songs()) == 0:
             return
         
@@ -822,11 +1015,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.shuffle_order = list(range(len(playlist.get_songs())))
         random.shuffle(self.shuffle_order)
         
-        # add to recently played
-        self.perform_post_request_async(self.SERVER_URL + self.ADD_RECENTLY_PLAYED_ENDPOINT + playlist.get_uuid(), callback=lambda reply: None)
-        self.user.recently_played.insert(0, playlist.get_uuid())
-        
-        self.update_home_page()
+        if add_to_recent:
+            # add to recently played
+            self.perform_post_request_async(self.SERVER_URL + self.ADD_RECENTLY_PLAYED_ENDPOINT + playlist.get_uuid(), callback=lambda reply: None)
+            if playlist.get_uuid() in self.user.recently_played:
+                self.user.recently_played.remove(playlist.get_uuid())
+            self.user.recently_played.insert(0, playlist.get_uuid())
+            
+            self.update_home_page()
         
         # play the playlist in sequence
         self.cur_playlist = playlist
@@ -834,11 +1030,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.player_page_playlist_label.setText(self.cur_playlist.get_name())
         
-        self.play_song(self.songs[self.cur_playlist.get_song_at_index(self.cur_playlist_index)])
+        if self.is_shuffle_on:
+            self.play_song(self.songs[self.cur_playlist.get_song_at_index(self.shuffle_order[self.cur_playlist_index])])
+        else:
+            self.play_song(self.songs[self.cur_playlist.get_song_at_index(self.cur_playlist_index)])
     
-    def play_playlist_shuffle(self, playlist: Playlist):
+    def play_playlist_shuffle(self, playlist: Playlist, add_to_recent=True):
         self.is_shuffle_on = True
-        self.play_playlist(playlist)
+        self.play_playlist(playlist, add_to_recent=add_to_recent)
 
     def handle_media_status_changed(self, status: QMediaPlayer.MediaStatus):
         if status == QMediaPlayer.MediaStatus.LoadedMedia:
@@ -848,7 +1047,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.cur_playlist_index += 1
                 if self.cur_playlist_index == len(self.cur_playlist.songs):
                     if self.is_loop_on:
-                        print("Looping")
                         self.cur_playlist_index = 0
                     else:
                         self.cur_playlist_index = -1
@@ -862,17 +1060,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.play_song(self.songs[self.cur_playlist.get_song_at_index(self.cur_playlist_index)])
             else:
                 if self.is_loop_on:
-                    print("Looping")
                     self.play_song(self.cur_song)
                 else:
                     self.clear_player()
         elif status == QMediaPlayer.MediaStatus.InvalidMedia:
             pass
-        
-        # print(status)
-        # print(self.media_player.error())
-
-        # print(self.cur_playlist, self.cur_playlist_index)
 
     def pause(self):
         if self.cur_song is None:
@@ -997,7 +1189,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_duration_text(duration)
                 
         # update slider
-        # player_position = self.media_player.position() / 10000 # should depend on duration too
         
         # slider goes from 0 to 100
         player_position = (self.media_player.position() / duration) * 100
@@ -1028,13 +1219,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.playlist_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.playlist_image_widget.layout().addWidget(self.playlist_image_label)
-        
-        # todo: shuffle current playlist
-        # self.playlist_shuffle_button.clicked.connect(...)
 
     def open_playlist(self, playlist: Playlist):
-        self.clear_playlist_page()
-
         self.opened_playlist = playlist
 
         self.playlist_no_songs_label.show()
@@ -1042,6 +1228,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.playlist_name_label.setText(playlist.name)
         
         self.playlist_play_button.clicked.connect(lambda: self.play_playlist(self.opened_playlist))
+        self.playlist_edit_button.show()
         self.playlist_edit_button.clicked.connect(self.edit_playlist)
         self.playlist_shuffle_button.clicked.connect(lambda: self.play_playlist_shuffle(self.opened_playlist))
         
@@ -1056,7 +1243,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.load_song(song)
             self.add_playlist_item(self.songs[song])
 
+    def open_playlist_page(self, playlist: Playlist):
+        self.clear_playlist_page()
+
+        self.open_playlist(playlist)
+
         self.open_page_with_back_button(self.playlist_page)
+    
+    def update_playlist_page(self):
+        cur_playlist = self.opened_playlist
+        
+        self.clear_playlist_page()
+        
+        self.open_playlist(cur_playlist)
 
     def edit_playlist(self):
         style_sheet = "background-color: white; color: black; border: 1px solid black; padding: 5px; border-radius: 5px;"
@@ -1134,40 +1333,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.new_image_path = image_path
 
     PLAYLIST_EDIT_ENDPOINT = "edit-playlist/"
+    DELETE_PLAYLIST_ENDPOINT = "delete-playlist/"
     def save_new_playlist_details(self, playlist_name: str, playlist_image_path: str):
         
-        playlist_image = QPixmap(playlist_image_path).scaled(120, 120)
-        
-        # multipart = QHttpMultiPart(QHttpMultiPart.ContentType.FormDataType)
-        # text_part = QHttpPart()
-        # text_part.setHeader(QNetworkRequest.KnownHeaders.ContentDispositionHeader, "form-data; name=\"playlist_name\"")
-        # text_part.setBody(playlist_name.encode())
-        
-        # image_part = QHttpPart()
-        # text_part.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, f"image/{playlist_image_path.split('.')[-1]}")
-        # image_part.setHeader(QNetworkRequest.KnownHeaders.ContentDispositionHeader, "form-data; name=\"playlist_image\"")
-        # file = QFile(playlist_image_path)
-        # file.open(QIODevice.OpenModeFlag.ReadOnly)
-        # image_part.setBodyDevice(file)
-        # file.setParent(multipart)
-        
-        # multipart.append(text_part)
-        # multipart.append(image_part)
-        
-        with open(playlist_image_path, "rb") as image_file:
-            image_base64 = base64.urlsafe_b64encode(image_file.read()).decode()
-        
-        data = {
-            "playlist_name": playlist_name,
-            "playlist_image": image_base64,
-            "image_filename": playlist_image_path.split("/")[-1]
-        }
-        
-        # reply = self.perform_post_request_sync(
-            # url=self.SERVER_URL + self.PLAYLIST_EDIT_ENDPOINT + self.opened_playlist.get_uuid(),
-        #     data=multipart,
-        #     headers={QNetworkRequest.KnownHeaders.ContentTypeHeader: f"multipart/form-data; boundary={multipart.boundary()}"},
-        #     is_json=False)
+        if playlist_image_path:
+            playlist_image = QPixmap(playlist_image_path).scaled(200, 200)
+            
+            with open(playlist_image_path, "rb") as image_file:
+                image_base64 = base64.urlsafe_b64encode(image_file.read()).decode()
+                
+            data = {
+                "playlist_name": playlist_name,
+                "playlist_image": image_base64,
+                "image_filename": playlist_image_path.split("/")[-1]
+            }
+        else:
+            data = {
+                "playlist_name": playlist_name
+            }
         
         reply = self.perform_post_request_sync(
             url=self.SERVER_URL + self.PLAYLIST_EDIT_ENDPOINT + self.opened_playlist.get_uuid(),
@@ -1177,10 +1360,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         reply_json = QJsonDocument.fromJson(reply_data).object()
         
         self.opened_playlist.set_name(playlist_name)
-        self.opened_playlist.set_image(playlist_image)
-
         self.playlist_name_label.setText(playlist_name)
-        self.playlist_image_label.setPixmap(playlist_image)
+        
+        if playlist_image_path:
+            self.opened_playlist.set_image(playlist_image)
+            self.playlist_image_label.setPixmap(playlist_image)
         
         self.update_home_page()
         self.update_library_page()
@@ -1208,13 +1392,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.song_items.remove(self.song_items[i])
 
     SONG_IMAGE_ENDPOINT = "get-song-image/"
-    def add_playlist_item(self, song: Song):
+    def add_playlist_item(self, song: Song, is_album=False):
         if len(self.song_items) == 0:
             self.playlist_no_songs_label.hide()
         
-        item = SongItem(song, len(self.song_items), self.opened_playlist, self)
+        item = SongItem(song, len(self.song_items), self.opened_playlist, is_album=is_album, parent=self)
         self.song_items.append(item)
         self.playlist_contents.layout().addWidget(item)
+
+    # -----------
+    # -- ALBUM --
+    # -----------
+    def open_album(self, album: Album):
+        self.clear_playlist_page()
+        
+        temp_playlist = Playlist("temp", album.get_title(), album.get_artists()[0], album.get_songs(), album.get_image())
+        
+        self.opened_playlist = temp_playlist
+        
+        self.playlist_no_songs_label.show()
+
+        self.playlist_name_label.setText(album.get_title())
+        
+        self.playlist_play_button.clicked.connect(lambda: self.play_playlist(self.opened_playlist, add_to_recent=False))
+        self.playlist_edit_button.hide()
+        self.playlist_shuffle_button.clicked.connect(lambda: self.play_playlist_shuffle(self.opened_playlist, add_to_recent=False))
+        
+        image = album.get_image()
+        if image:
+            pixmap = QPixmap(image).scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio)
+            # self.playlist_image_label.setScaledContents(True)
+            self.playlist_image_label.setPixmap(pixmap)
+        
+        for song in album.get_songs():
+            if song not in self.songs:
+                self.load_song(song)
+            self.add_playlist_item(self.songs[song], is_album=True)
+        
+        self.open_page_with_back_button(self.playlist_page)
 
     # ------------------
     # -- GENERIC PAGE --
@@ -1226,15 +1441,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.open_page_with_back_button(self.generic_page)
         self.generic_title.setText(title)
         
-        self.clear_generic_page()
+        self.clear_widget(self.generic_scrollarea_contents)
         
         for item in items:
             self.generic_scrollarea_contents.layout().addWidget(item)
     
-    def clear_generic_page(self):
-        for i in reversed(range(self.generic_scrollarea_contents.layout().count())): 
-            self.generic_scrollarea_contents.layout().itemAt(i).widget().setParent(None)
-
 # ----------------
 # -- COMPONENTS --
 # ----------------
@@ -1275,16 +1486,18 @@ class BigThumbnailItem(QPushButton):
     def __init__(self, heading="No Title", subheading="", image=None, parent=None):
         super().__init__(parent)
 
+        self.setMinimumSize(QSize(140, 180))
+        self.setMaximumSize(QSize(140, 180))
         self.setFixedSize(QSize(140, 180))
         self.setCursor(Qt.PointingHandCursor)
         self.setAutoFillBackground(False)
-
-        icon_label = QLabel(self)
-        icon_label.setFixedSize(120, 120)
-        icon_label.setAlignment(Qt.AlignCenter)
+        
+        self.icon_label = QLabel(self)
+        self.icon_label.setFixedSize(120, 120)
+        self.icon_label.setAlignment(Qt.AlignCenter)
         if image:
             pixmap = QPixmap(image).scaled(120, 120)
-            icon_label.setPixmap(pixmap)
+            self.icon_label.setPixmap(pixmap)
 
         heading_label = QLabel(self)
         heading_label.setText(heading)
@@ -1297,7 +1510,7 @@ class BigThumbnailItem(QPushButton):
         subheading_label.setStyleSheet("color: #cccccc; font-size: 12px; background-color: transparent;")
         
         layout = QVBoxLayout(self)
-        layout.addWidget(icon_label)
+        layout.addWidget(self.icon_label)
         layout.addWidget(heading_label)
         if subheading:
             layout.addWidget(subheading_label)
@@ -1350,16 +1563,16 @@ class LongLabelButton(QWidget):
         """)
 
 class SmallPlaylistItem(SmallThumbnailItem):
-    def __init__(self, playlist: Playlist, parent: MainWindow = None):
+    def __init__(self, playlist: Playlist, parent: MainWindow):
         super().__init__(playlist.name, playlist.image, parent)
         
         self.playlist = playlist
         self.main_window = parent
-        
+                
         self.clicked.connect(self.show_playlist)
 
     def show_playlist(self):
-        self.main_window.open_playlist(self.playlist)
+        self.main_window.open_playlist_page(self.playlist)
 
 class BigPlaylistItem(BigThumbnailItem):
     def __init__(self, playlist: Playlist, parent: MainWindow):
@@ -1371,7 +1584,49 @@ class BigPlaylistItem(BigThumbnailItem):
         self.clicked.connect(self.show_playlist)
 
     def show_playlist(self):
-        self.main_window.open_playlist(self.playlist)
+        self.main_window.open_playlist_page(self.playlist)
+
+class AlbumItem(BigThumbnailItem):
+    def __init__(self, album: Album, parent: MainWindow):
+        super().__init__(album.get_title(), album.get_artists()[0], album.get_image(), parent)
+
+        self.main_window = parent
+        self.album = album
+
+        self.menu_button = QToolButton(self)
+        # self.menu_button.setText("...")
+        menu_icon = QIcon()
+        menu_icon.addFile(":/resources/assets/images/menu.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.menu_button.setIcon(menu_icon)
+        self.menu_button.setIconSize(QSize(16, 16))
+        
+        self.menu_button.clicked.connect(self.show_menu)
+        self.menu_button.setStyleSheet("background-color: rgba(0,0,0,0)")
+        
+        geometry = self.geometry()
+        self.menu_button.setGeometry(geometry.right()-24, geometry.bottom()-24, 16, 16)
+    
+        self.clicked.connect(self.on_click)
+    
+    def on_click(self):
+        # TODO: open the album and play starting
+        print("test")
+        self.main_window.open_album(self.album)
+
+    def show_menu(self):
+        menu = QMenu(self)
+        menu.setStyleSheet("background-color: #1e1e1e")
+
+        # TODO: add to library?
+        menu.setStyleSheet("background-color: #1e1e1e")
+        add_to_playlist_action = QAction("Add to Library", self)
+        add_to_playlist_action.triggered.connect(self.add_to_library)
+        menu.addAction(add_to_playlist_action)
+        
+        menu.exec_(self.menu_button.mapToGlobal(self.menu_button.rect().bottomRight()))
+
+    def add_to_library(self):
+        pass
 
 class BigSongItem(BigThumbnailItem):
     def __init__(self, song: Song, parent: MainWindow):
@@ -1379,6 +1634,8 @@ class BigSongItem(BigThumbnailItem):
 
         self.main_window = parent
         self.song = song
+        
+        song.add_observer(self)
 
         self.menu_button = QToolButton(self)
         # self.menu_button.setText("...")
@@ -1394,7 +1651,11 @@ class BigSongItem(BigThumbnailItem):
         self.menu_button.setGeometry(geometry.right()-24, geometry.bottom()-24, 16, 16)
     
         self.clicked.connect(self.play_song)
-    
+
+    def update_image(self):
+        pixmap = QPixmap(self.song.get_image()).scaled(120, 120)
+        self.icon_label.setPixmap(pixmap)
+        
     def play_song(self):
         self.main_window.play_song(self.song)
 
@@ -1511,15 +1772,66 @@ class RecentSearchItem(LongLabelButton):
     def __init__(self, text: str, parent: MainWindow = None) -> None:
         super().__init__(text, parent)
         
-        self.label.clicked.connect(lambda: parent.search_query(text))
+        self.label.clicked.connect(lambda: parent.perform_search_query(text))
         
         self.tool_button.setIcon(QIcon(":/resources/assets/images/cancel.png"))
         self.tool_button.clicked.connect(lambda: parent.remove_recent_search(self))
 
 # -- library page --
-class LibraryItem(SmallThumbnailItem):
-    def __init__(self, text: str, image_path: str, parent=None):
-        super().__init__(text, image_path, parent)
+class LibraryItem(QWidget):
+    def __init__(self, playlist: Playlist, parent: MainWindow) -> None:
+        super().__init__(parent)
+        
+        self.main_window = parent
+        self.playlist = playlist
+        
+        layout = QHBoxLayout()
+        layout.addWidget(SmallPlaylistItem(playlist, parent))
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.delete_button = QToolButton(self)
+        self.delete_button.setIcon(QIcon(":/resources/assets/images/delete.png"))
+        self.delete_button.setIconSize(QSize(40, 40))
+        self.delete_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.delete_button.clicked.connect(self.show_delete_playlist_popup)
+        layout.addWidget(self.delete_button)
+        
+        self.setLayout(layout)
+        
+    def show_delete_playlist_popup(self):
+        delete_playlist_popup = QMessageBox(self.main_window)
+        delete_playlist_popup.setWindowTitle("Delete Playlist")
+        
+        delete_playlist_popup.setIcon(QMessageBox.Icon.Warning)
+
+        delete_playlist_popup.setText(f"Delete <{self.playlist.get_name()}> from your library?")
+
+        delete_playlist_popup.setStandardButtons(QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok)
+        
+        ret = delete_playlist_popup.exec()
+        if ret == QMessageBox.StandardButton.Ok:
+            self.delete_playlist()
+
+        # buttons_layout = QHBoxLayout()
+        # cancel_button = QPushButton("Cancel")
+
+        # cancel_button.clicked.connect(delete_playlist_popup.close)
+        # buttons_layout.addWidget(cancel_button)
+
+        # confirm_delete_button = QPushButton("Delete")
+        # confirm_delete_button.clicked.connect(self.delete_playlist)
+        # confirm_delete_button.clicked.connect(delete_playlist_popup.close)
+        # buttons_layout.addWidget(confirm_delete_button)
+
+        # layout.addLayout(buttons_layout)
+        # delete_playlist_popup.setLayout(layout)
+
+        # delete_playlist_popup.show()
+
+    def delete_playlist(self):
+        self.main_window.perform_post_request_sync(self.main_window.SERVER_URL + self.main_window.DELETE_PLAYLIST_ENDPOINT + self.playlist.get_uuid())
+        self.playlist.remove_song(self.song.get_uuid())
+        self.main_window.update_library_page()
 
 # -- profile page --
 class ProfileItem(LongLabelButton):
@@ -1533,10 +1845,13 @@ class ProfileItem(LongLabelButton):
 
 # -- playlists page --
 class SongItem(QWidget):
-    def __init__(self, song: Song, index: int, playlist: Playlist, parent: MainWindow=None) -> None:
+    def __init__(self, song: Song, index: int, playlist: Playlist, is_album: bool=False, parent: MainWindow=None) -> None:
         super().__init__(parent)
         
         self.main_window = parent
+        
+        self.song = song
+        self.playlist = playlist
         
         icon_label = QLabel(self)
         icon_label.setFixedSize(60, 60)
@@ -1568,13 +1883,21 @@ class SongItem(QWidget):
         play_button.setIcon(QIcon(":/resources/assets/images/play.png"))
         play_button.setCursor(QCursor(Qt.PointingHandCursor))
 
-        play_button.clicked.connect(lambda: self.main_window.play_playlist(playlist, index))
-                
+        play_button.clicked.connect(lambda: self.main_window.play_playlist(playlist, index, add_to_recent=(not is_album)))
+
         layout = QHBoxLayout(self)
         layout.addWidget(icon_label)
         layout.addWidget(labels_widget)
         layout.addWidget(duration_label)
         layout.addWidget(play_button)
+
+        if not is_album:
+            self.song_menu_button = QToolButton(self)
+            self.song_menu_button.setIcon(QIcon(":/resources/assets/images/menu.png"))
+            self.song_menu_button.setCursor(QCursor(Qt.PointingHandCursor))
+            self.song_menu_button.clicked.connect(self.show_song_menu)
+            layout.addWidget(self.song_menu_button)
+    
         self.setLayout(layout)
         
         self.setProperty("class", "PlaylistItem")
@@ -1587,6 +1910,62 @@ class SongItem(QWidget):
                 border-radius: 5px;
             }
         """)
+
+    def show_song_menu(self):
+        menu = QMenu(self)
+        menu.setStyleSheet("background-color: #1e1e1e")
+        
+        delete_from_playlist_action = QAction("Delete from this playlist", self)
+        delete_from_playlist_action.triggered.connect(self.delete_song_confirm)
+        menu.addAction(delete_from_playlist_action)
+            
+        move_song_up_action = QAction("Move Up", self)
+        move_song_up_action.triggered.connect(self.move_song_up)
+        menu.addAction(move_song_up_action)
+
+        move_song_down_action = QAction("Move Down", self)
+        move_song_down_action.triggered.connect(self.move_song_down)
+        menu.addAction(move_song_down_action)
+        
+        menu.exec_(self.song_menu_button.mapToGlobal(self.song_menu_button.rect().bottomRight()))
+
+    MOVE_PLAYLIST_SONG_ENDPOINT = "move-playlist-song/"
+    def move_song_up(self):
+        self.playlist.move_song_up(self.song.get_uuid())
+        self.main_window.update_playlist_page()
+        self.main_window.perform_post_request_sync(
+            url=self.main_window.SERVER_URL + self.MOVE_PLAYLIST_SONG_ENDPOINT + self.playlist.get_uuid() + "/" + self.song.get_uuid(),
+            data={"direction": "up"}
+        )
+
+    def move_song_down(self):
+        self.playlist.move_song_down(self.song.get_uuid())
+        self.main_window.update_playlist_page()
+        self.main_window.perform_post_request_sync(
+            url=self.main_window.SERVER_URL + self.MOVE_PLAYLIST_SONG_ENDPOINT + self.playlist.get_uuid() + "/" + self.song.get_uuid(),
+            data={"direction": "down"}
+        )
+
+    def delete_song_confirm(self):
+        delete_song_popup = QMessageBox(self.main_window)
+        delete_song_popup.setWindowTitle("Delete Song")
+        
+        delete_song_popup.setIcon(QMessageBox.Icon.Warning)
+
+        delete_song_popup.setText(f"Delete <{self.song.title}> from <{self.playlist.get_name()}>?")
+
+        delete_song_popup.setStandardButtons(QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok)
+        
+        ret = delete_song_popup.exec()
+        if ret == QMessageBox.StandardButton.Ok:
+            self.delete_song_from_playlist()
+        
+    def delete_song_from_playlist(self):
+        self.main_window.perform_post_request_sync(
+            self.main_window.SERVER_URL + self.main_window.DELETE_PLAYLIST_ENDPOINT + self.playlist.get_uuid() + "/" + self.song.get_uuid()
+        )
+        self.playlist.remove_song(self.song.get_uuid())
+        self.main_window.update_playlist_page()
 
 # -- utility --
 def ms_to_time(duration_ms: float):
