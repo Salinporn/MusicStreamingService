@@ -7,7 +7,7 @@ from fastapi.exceptions import HTTPException
 from auth import current_user
 from server import user_manager, music_manager
 from models import Song, User
-from search import search, index_data
+from search import search, index_data, recommend
 
 from werkzeug.security import generate_password_hash
 import shutil
@@ -15,6 +15,7 @@ from pathlib import Path
 from datetime import datetime
 from mutagen.mp3 import MP3
 import base64
+import os.path
 
 main = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -30,8 +31,8 @@ async def upload_file(file: UploadFile, file_types: list[str], file_path: str):
     # move the cursor back to the beginning
     await file.seek(0)
 
-    if file_size > 10 * 1024 * 1024:
-        # more than 10 MB
+    if file_size > 20 * 1024 * 1024:
+        # more than 20 MB
         raise HTTPException(status_code=400, detail="File too large")
 
     # check the content type
@@ -44,14 +45,10 @@ async def upload_file(file: UploadFile, file_types: list[str], file_path: str):
     
     return True
 
-# -- views -- 
-@main.get("/", response_class=HTMLResponse)
-@main.get("/dashboard/", response_class=HTMLResponse)
-@main.get("/dashboard/home", response_class=HTMLResponse)
-def dashboard_home(request: Request, user=Depends(current_user)):
-    return templates.TemplateResponse("dashboard_home.html", {"request": request})
+# --- views --- 
 
-# manage users
+# -- manage users --
+@main.get("/", response_class=HTMLResponse)
 @main.get("/dashboard/users", response_class=HTMLResponse)
 def dashboard_users(request: Request, user=Depends(current_user)):
     return templates.TemplateResponse("dashboard_users.html", {
@@ -210,9 +207,9 @@ async def dashboard_songs_edit_submit(
             music_manager.delete_song_from_uuid(song_id)
         elif action == "edit":
             if genres == None:
-                genres = song.get_genres()
+                genres = [g.get_uuid() for g in song.get_genres()]
             if artists == None:
-                artists = song.get_artists()
+                artists = [a.get_uuid() for a in song.get_artists()]
             
             music_manager.edit_song(song_id, song_title, genres, artists)
     
@@ -424,12 +421,12 @@ def authorized_session_id(request: Request):
     session = user_manager.get_session(session_id)
 
     if not session:
-        return
+        raise HTTPException(status_code=401, detail="Expired session cookie")
 
     if datetime.now() > session["expiry"]:
         # expired cookie
         user_manager.delete_session(session_id)
-        raise HTTPException(status_code=400, detail="Expired session cookie")
+        raise HTTPException(status_code=401, detail="Expired session cookie")
 
     user_uuid = session["user_uuid"]
     return user_manager.get_user_from_uuid(user_uuid)
@@ -450,17 +447,20 @@ def add_new_playlist(user: User=Depends(authorized_session_id)):
 def get_playlist_image(playlist_id: str, user: User=Depends(authorized_session_id)):
     playlist = user_manager.get_playlist(user.get_uuid(), playlist_id)
     
-    if playlist.get_file_name() is not None:
-        return FileResponse(MUSIC_FOLDER_PATH + PLAYLIST_FOLDER_PATH + playlist.get_uuid())
+    path = MUSIC_FOLDER_PATH + PLAYLIST_FOLDER_PATH + playlist.get_uuid()
+    if os.path.isfile(path):    
+        if playlist.get_file_name() is not None:
+            return FileResponse(path)
 
 @main.post("/edit-playlist/{playlist_id}", response_class=JSONResponse)
-async def edit_playlist(request: Request, playlist_id: str, playlist_name: str = Body(...), playlist_image: str = Body(...), image_filename: str = Body(...), user: User=Depends(authorized_session_id)):
+async def edit_playlist(request: Request, playlist_id: str, playlist_name: str = Body(...), playlist_image: str = Body(""), user: User=Depends(authorized_session_id)):
     user_manager.edit_playlist(user.get_uuid(), playlist_id, playlist_name)
     
-    image_data = base64.urlsafe_b64decode(playlist_image)
-    with open(MUSIC_FOLDER_PATH + PLAYLIST_FOLDER_PATH + playlist_id, "wb") as image_file:
-        image_file.write(image_data)
-    
+    if playlist_image:
+        image_data = base64.urlsafe_b64decode(playlist_image)
+        with open(MUSIC_FOLDER_PATH + PLAYLIST_FOLDER_PATH + playlist_id, "wb") as image_file:
+            image_file.write(image_data)
+        
     return JSONResponse(content={
         "message": "Edited playlist successfully"
     })
@@ -484,15 +484,58 @@ def add_song_to_playlist(playlist_id: str, user: User=Depends(authorized_session
         "message": "Added playlist to recently played successfully"
     })
 
+@main.post("/delete-playlist/{playlist_id}", response_class=JSONResponse)
+def delete_playlist(playlist_id: str, user: User=Depends(authorized_session_id)):
+    user_manager.delete_playlist(user.get_uuid(), playlist_id)
+    
+    return JSONResponse(status_code=200, content={
+        "message": "Deleted playlist successfully"
+    })
 
+@main.post("/delete-playlist/{playlist_id}/{song_id}", response_class=JSONResponse)
+def delete_song_from_playlist(playlist_id: str, song_id: str, user: User=Depends(authorized_session_id)):
+    playlist = user_manager.get_playlist(user.get_uuid(), playlist_id)
+    playlist.remove_song(music_manager.get_song_from_uuid(song_id))
+    
+    return JSONResponse(status_code=200, content={
+        "message": "Deleted song successfully"
+    })
+    
+@main.post("/move-playlist-song/{playlist_id}/{song_id}", response_class=JSONResponse)
+async def move_playlist_song(request: Request, playlist_id: str, song_id: str, user: User=Depends(authorized_session_id)):
+    data = await request.json()
+    direction = None if "direction" not in data else data["direction"]
+    
+    playlist = user_manager.get_playlist(user.get_uuid(), playlist_id)
+    song = music_manager.get_song_from_uuid(song_id)
+    
+    
+    if direction == "up":
+        playlist.move_song_up(song)
+    elif direction == "down":
+        playlist.move_song_down(song)
+    else:
+        return
+    
+    return JSONResponse(status_code=200, content={
+        "message": "Moved song successfully"
+    })
 
 # -- songs --
 @main.get("/get-songs/{song_id}", response_class=JSONResponse)
 def get_song_data(song_id: str, user: User=Depends(authorized_session_id)):
     song = music_manager.get_song_from_uuid(song_id)
-    return JSONResponse(content=song.get_json())
+    
+    content = song.get_json()
+    
+    return JSONResponse(content=content)
 
 # -- albums --
+@main.get("/get-album/{album_id}", response_class=JSONResponse)
+def get_album_data(album_id: str, user: User=Depends(authorized_session_id)):
+    album = music_manager.get_album_from_uuid(album_id)
+    return JSONResponse(content=album.get_json())
+
 @main.get("/get-album-image/{album_id}", response_class=FileResponse)
 def get_song_image(album_id: str, user: User=Depends(authorized_session_id)):
     album = music_manager.get_album_from_uuid(album_id)
@@ -513,16 +556,30 @@ def get_category_image(genre_id: str, user: User=Depends(authorized_session_id))
     return FileResponse(MUSIC_FOLDER_PATH + GENRE_FOLDER_PATH + genre.file_name)
 
 # -- search query --
-@main.get("/search")
-def perform_search_query(query: str):
+@main.get("/search", response_class=JSONResponse)
+def perform_search_query(request: Request, query: str, user: User=Depends(authorized_session_id)):
+    
     result = search(query)
     
-    return result
+    return JSONResponse(content=result)
+
+# -- get recommended songs --
+@main.get("/get-recommended", response_class=JSONResponse)
+def get_recommended_songs(request: Request, user: User=Depends(authorized_session_id)):
+    recent_playlists = user.get_recently_played()
+    recent_songs: list[Song] = []
+    for playlist in recent_playlists[:3]:
+        recent_songs += playlist.get_songs()
+    recent_song_ids = [song.get_uuid() for song in recent_songs]
+    
+    result = recommend(recent_song_ids)
+    
+    return JSONResponse(content=result)
 
 # -- handle streaming --
 CHUNK_SIZE = 1024
 @main.get("/stream-audio/{song_id}", response_class=StreamingResponse)
-async def stream_audio(song_id: str):
+async def stream_audio(song_id: str, user: User=Depends(authorized_session_id)):
     song = music_manager.get_song_from_uuid(song_id)
     def iterate_audio():
         try:
@@ -538,7 +595,7 @@ async def stream_audio(song_id: str):
     return StreamingResponse(iterate_audio(), media_type="audio/mpeg")
 
 @main.get("/get-audio/{song_id}", response_class=FileResponse)
-async def get_audio(song_id: str):
+async def get_audio(song_id: str, user: User=Depends(authorized_session_id)):
     song = music_manager.get_song_from_uuid(song_id)
     
     return FileResponse(

@@ -6,6 +6,14 @@
 <link href="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.0.0/datatables.min.css" rel="stylesheet">
 {% endblock %}
 
+{% macro join_list(list, attr) %}
+    {% set joined_list = [] %}
+    {% for item in list %}
+        {% set _ = joined_list.append(item[attr]) %}
+    {% endfor %}
+    {{ joined_list | join(", ") }}
+{% endmacro %}
+
 {% block content %}
 <ul class="nav nav-tabs" id="myTab" role="tablist">
   <li class="nav-item" role="presentation">
@@ -45,14 +53,10 @@
                                 <td>{{ loop.index }}</td>
                                 <td>{{ s.title }}</td>
                                 <td>
-                                    {% for g in s.genres %}
-                                        {{ g.name }}
-                                    {% endfor %}
+                                    {{ join_list(s.genres, "name") }}
                                 </td>
                                 <td>
-                                    {% for a in s.artists %}
-                                        {{ a.name }}
-                                    {% endfor %}
+                                    {{ join_list(s.artists, "name" ) }}
                                 </td>
                                 <td>{{ s.album.title }}</td>
                             </tr>
@@ -101,6 +105,7 @@
                             <th scope="col">#</th>
                             <th scope="col">Name</th>
                             <th scope="col">Artists</th>
+                            <th scope="col">No. Songs</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -109,10 +114,9 @@
                                 <td>{{ loop.index }}</td>
                                 <td>{{ a.title }}</td>
                                 <td>
-                                    {% for a in a.artists %}
-                                        {{ a.name }}
-                                    {% endfor %}
+                                    {{ join_list(a.artists, "name") }}
                                 </td>
+                                <td>{{ a.songs | length }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

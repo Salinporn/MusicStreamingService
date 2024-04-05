@@ -124,6 +124,16 @@ class UserManager(Manager):
         for playlist in playlists:
             if playlist.get_uuid() == playlist_uuid:
                 return playlist
+            
+    def delete_playlist(self, user_uuid, playlist_uuid) -> bool:
+        user: User = self.users[user_uuid]
+        playlists: list[Playlist] = user.get_playlists()
+        for playlist in playlists:
+            if playlist.get_uuid() == playlist_uuid:
+                playlists.delete_playlist(playlist)
+                del playlist
+                return True
+        return False
 
 class MusicManager(Manager):
     def __init__(self, root):
@@ -163,9 +173,14 @@ class MusicManager(Manager):
         if uuid in self.songs:
             # just in case
             # self.delete_song_file(uuid)
+            song = self.songs[uuid]
             
+            for g in self.genres:
+                self.genres[g].delete_song(song)
             for a in self.artists:
-                self.artists[a].delete_song(self)
+                self.artists[a].delete_song(song)
+            for a in self.albums:
+                self.albums[a].delete_song(song)
             
             del self.songs[uuid]
             return True
@@ -176,7 +191,10 @@ class MusicManager(Manager):
         if uuid not in self.songs:
             return False
         
-        self.songs[uuid].edit(title, genres, artists)
+        genre_list = [self.genres[g] for g in genres]
+        artist_list = [self.artists[a] for a in artists]
+        
+        self.songs[uuid].edit(title, genre_list, artist_list)
         
         return True
     
@@ -247,6 +265,12 @@ class MusicManager(Manager):
         if uuid not in self.albums:
             return False
         
+        album: Album = self.albums[uuid]
+        for artist in album.get_artists():
+            artist.delete_album(album)
+        for song in album.get_songs():
+            song.delete_album()
+        
         del self.albums[uuid]
         return True
     
@@ -278,6 +302,10 @@ class MusicManager(Manager):
     
     def delete_genre_from_uuid(self, uuid) -> bool:
         if uuid in self.genres:
+            genre = self.genres[uuid]
+            for s in self.songs:
+                self.songs[s].delete_genre(genre)
+            
             del self.genres[uuid]
             return True
         else:
