@@ -26,13 +26,22 @@ class User(persistent.Persistent):
     def get_playlists(self):
         return self.playlists
     
+    def get_recently_played(self):
+        return self.recently_played
+        
     def get_json(self):
+        for playlist in self.recently_played:
+            if type(playlist) == str:
+                self.recently_played.remove(playlist)
+            if playlist == None:
+                self.recently_played.remove(playlist)
+        
         return {
             "uuid": self.uuid,
             "email": self.email,
             "name": self.name,
             "playlists": [playlist.get_json() for playlist in self.playlists],
-            "recently_played": [playlist.get_json() for playlist in self.recently_played]
+            "recently_played": [playlist.get_json() for playlist in self.recently_played ]
         }
     
     def edit(self, new_uuid, new_email, new_name, new_password_hash, new_is_admin):
@@ -46,6 +55,8 @@ class User(persistent.Persistent):
         self.playlists.append(playlist)
         
     def add_recently_played(self, playlist: "Playlist"):
+        if playlist in self.recently_played:
+            self.recently_played.remove(playlist)
         self.recently_played.insert(0, playlist)
         if len(self.recently_played) > 6:
             self.recently_played.pop()
@@ -83,12 +94,20 @@ class Song(persistent.Persistent):
         return self.file_name
     
     def get_json(self):
+        for genre in self.genres:
+            if type(genre) == str:
+                self.genres.remove(genre)
+        for artist in self.artists:
+            if type(artist) == str:
+                self.artists.remove(artist)
+
         return {
             "uuid": self.uuid,
             "title": self.title,
             "genres": [genre.name for genre in self.genres],
             "artists": [artist.name for artist in self.artists],
-            "album": None if self.album is None else self.album.title,
+            "album": None if self.album is None else self.album.get_uuid(),
+            "album_title": None if self.album is None else self.album.get_title(),
             "duration": self.duration_ms
         }
 
@@ -101,13 +120,30 @@ class Song(persistent.Persistent):
     def set_duration(self, duration):
         self.duration_ms = int(duration)
 
-    def edit(self, title, genres, artists):
+    def edit(self, title, genres, artists):        
         self.title = title
+        for g in self.genres:
+            g.delete_song(self)
+        for a in self.artists:
+            a.delete_song(self)
+        
+        for g in genres:
+            g.add_song(self)
+        for a in artists:
+            a.add_song(self)
+        
         self.genres = genres
         self.artists = artists
     
     def delete_artist(self, artist: "Artist"):
         self.artists.remove(artist)
+    
+    def delete_album(self):
+        self.album = None
+    
+    def delete_genre(self, genre: "Genre"):
+        if genre in self.genres:
+            self.genres.remove(genre)
         
 class Artist(persistent.Persistent):
     def __init__(self, uuid, name):
@@ -132,7 +168,11 @@ class Artist(persistent.Persistent):
         self.name = name
 
     def delete_song(self, song: Song):
-        self.songs.remove(song)
+        if song in self.songs:
+            self.songs.remove(song)
+
+    def delete_album(self, album: "Album"):
+        self.albums.remove(album)
 
     def add_song(self, song: Song):
         self.songs.append(song)
@@ -163,6 +203,14 @@ class Album(persistent.Persistent):
     def get_file_name(self):
         return self.file_name
     
+    def get_json(self):
+        return {
+            "uuid": self.uuid,
+            "title": self.title,
+            "artists": [artist.get_name() for artist in self.artists],
+            "songs": [song.get_uuid() for song in self.songs],
+        }
+    
     def set_file_name(self, file_name):
         self.file_name = file_name
         
@@ -173,6 +221,9 @@ class Album(persistent.Persistent):
         
     def delete_artist(self, artist: Artist):
         self.artists.remove(artist)
+    
+    def delete_song(self, song: Song):
+        self.songs.remove(song)
     
     def add_song(self, song: Song):
         self.songs.append(song)
@@ -198,6 +249,9 @@ class Playlist(persistent.Persistent):
         except AttributeError:
             self.file_name = None
         
+    def get_songs(self):
+        return self.songs
+        
     def get_json(self) -> dict:
         return {
             "uuid": self.uuid,
@@ -213,6 +267,20 @@ class Playlist(persistent.Persistent):
         
     def add_song(self, song: Song):
         self.songs.append(song)
+
+    def delete_song(self, song: Song):
+        if song in self.songs:
+            self.songs.remove(song)
+
+    def move_song_up(self, song: Song):
+        index = self.songs.index(song)
+        if index > 0:
+            self.songs[index], self.songs[index - 1] = self.songs[index - 1], self.songs[index]
+
+    def move_song_down(self, song: Song):
+        index = self.songs.index(song)
+        if index < len(self.songs) - 1:
+            self.songs[index], self.songs[index + 1] = self.songs[index + 1], self.songs[index]
         
 class Genre(persistent.Persistent):
     def __init__(self, uuid, name, color):
@@ -240,6 +308,10 @@ class Genre(persistent.Persistent):
         
     def add_song(self, song: Song):
         self.songs.append(song)
+        
+    def delete_song(self, song: Song):
+        if song in self.songs:
+            self.songs.remove(song)
 
     def get_json(self) -> dict:        
         return {
