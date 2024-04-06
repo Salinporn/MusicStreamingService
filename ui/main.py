@@ -140,7 +140,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print(f"Error: {err}")
             print(reply.errorString())
             
-            print(QJsonDocument.fromJson(reply.readAll()).object())
+            # print(QJsonDocument.fromJson(reply.readAll()).object())
             
             raise Exception(err)
 
@@ -213,7 +213,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             # check if cookie is expired
             time_to_expiry = QDateTime.currentDateTimeUtc().secsTo(self.session.expirationDate())
-            print(time_to_expiry)
             if time_to_expiry <= 0:
                 self.settings.setValue("session", None)
                 self.session = None
@@ -485,8 +484,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # authenticated successfully, now use session cookie to get info
         
         user_data = self.get_user_data()
-        
-        print(user_data)
         
         self.songs: dict[str, Song] = {}
         self.playlists: dict[str, Playlist] = {}
@@ -877,7 +874,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.player_page_loop_button.clicked.connect(self.toggle_loop)
 
         loop_on: str = self.settings.value("loop")
-        print(loop_on)
         if loop_on:
             self.is_loop_on = bool(loop_on.title())
             self.sidebar_player_loop_button.setChecked(self.is_shuffle_on)
@@ -908,7 +904,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.player_slider.sliderPressed.connect(self.slider_pressed)
         self.player_slider.valueChanged.connect(self.slider_value_changed)
         self.player_slider.sliderReleased.connect(self.slider_released)
-        self.player_slider.mousePressEvent = self.click_slider.__get__(self.player_slider, QSlider)
 
         self.player_page_play_pause_button.clicked.connect(self.toggle_pause_play)
         self.player_page_previous_button.clicked.connect(self.previous_clicked)
@@ -936,9 +931,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.player_thumbnail.clicked.connect(self.open_player)
         
         self.clear_player()
-    
-    def click_slider(self, _):
-        pass
     
     def clear_player(self):
         self.is_playing = False
@@ -1165,7 +1157,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def toggle_shuffle(self):
         self.is_shuffle_on = not self.is_shuffle_on
-        print("Shuffle:", self.is_shuffle_on)
 
         self.settings.beginGroup("player")
         self.settings.setValue("shuffle", self.is_shuffle_on)
@@ -1173,7 +1164,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def toggle_loop(self):
         self.is_loop_on = not self.is_loop_on
-        print("Loop:", self.is_loop_on)
 
         self.settings.beginGroup("player")
         self.settings.setValue("loop", self.is_loop_on)
@@ -1605,40 +1595,10 @@ class AlbumItem(BigThumbnailItem):
         self.main_window = parent
         self.album = album
 
-        # self.menu_button = QToolButton(self)
-        # self.menu_button.setText("...")
-        # menu_icon = QIcon()
-        # menu_icon.addFile(":/resources/assets/images/menu.png", QSize(), QIcon.Normal, QIcon.Off)
-        # self.menu_button.setIcon(menu_icon)
-        # self.menu_button.setIconSize(QSize(16, 16))
-        
-        # self.menu_button.clicked.connect(self.show_menu)
-        # self.menu_button.setStyleSheet("background-color: rgba(0,0,0,0)")
-        
-        # geometry = self.geometry()
-        # self.menu_button.setGeometry(geometry.right()-24, geometry.bottom()-24, 16, 16)
-    
         self.clicked.connect(self.on_click)
     
     def on_click(self):
-        # TODO: open the album and play starting
-        print("test")
         self.main_window.open_album(self.album)
-
-    # def show_menu(self):
-    #     menu = QMenu(self)
-    #     menu.setStyleSheet("background-color: #1e1e1e")
-
-    #     # TODO: add to library?
-    #     menu.setStyleSheet("background-color: #1e1e1e")
-    #     add_to_playlist_action = QAction("Add to Library", self)
-    #     add_to_playlist_action.triggered.connect(self.add_to_library)
-    #     menu.addAction(add_to_playlist_action)
-        
-    #     menu.exec_(self.menu_button.mapToGlobal(self.menu_button.rect().bottomRight()))
-
-    # def add_to_library(self):
-    #     pass
 
 class BigSongItem(BigThumbnailItem):
     def __init__(self, song: Song, parent: MainWindow):
