@@ -435,7 +435,17 @@ def authorized_session_id(request: Request):
 @main.get("/user-data", response_class=JSONResponse)
 def get_user_data(user: User=Depends(authorized_session_id)):
     if user:
-        return JSONResponse(content=user.get_json())
+        user_data = user.get_json()
+        
+        songs = music_manager.get_songs()
+        for playlist in user_data["playlists"]:
+            playlist = user_manager.get_playlist(user.get_uuid(), playlist)
+            if playlist:
+                for song in playlist.get_songs():
+                    if song not in songs:
+                        playlist.delete_song(song)
+
+        return JSONResponse(content=user_data)
 
 # -- playlists --
 @main.post("/add-playlist", response_class=JSONResponse)
@@ -495,7 +505,7 @@ def delete_playlist(playlist_id: str, user: User=Depends(authorized_session_id))
 @main.post("/delete-playlist/{playlist_id}/{song_id}", response_class=JSONResponse)
 def delete_song_from_playlist(playlist_id: str, song_id: str, user: User=Depends(authorized_session_id)):
     playlist = user_manager.get_playlist(user.get_uuid(), playlist_id)
-    playlist.remove_song(music_manager.get_song_from_uuid(song_id))
+    playlist.delete_song(music_manager.get_song_from_uuid(song_id))
     
     return JSONResponse(status_code=200, content={
         "message": "Deleted song successfully"
@@ -508,7 +518,6 @@ async def move_playlist_song(request: Request, playlist_id: str, song_id: str, u
     
     playlist = user_manager.get_playlist(user.get_uuid(), playlist_id)
     song = music_manager.get_song_from_uuid(song_id)
-    
     
     if direction == "up":
         playlist.move_song_up(song)
@@ -525,10 +534,10 @@ async def move_playlist_song(request: Request, playlist_id: str, song_id: str, u
 @main.get("/get-songs/{song_id}", response_class=JSONResponse)
 def get_song_data(song_id: str, user: User=Depends(authorized_session_id)):
     song = music_manager.get_song_from_uuid(song_id)
-    
-    content = song.get_json()
-    
-    return JSONResponse(content=content)
+    if song:
+        content = song.get_json()
+        
+        return JSONResponse(content=content)
 
 # -- albums --
 @main.get("/get-album/{album_id}", response_class=JSONResponse)

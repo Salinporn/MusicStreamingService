@@ -128,9 +128,16 @@ class UserManager(Manager):
     def delete_playlist(self, user_uuid, playlist_uuid) -> bool:
         user: User = self.users[user_uuid]
         playlists: list[Playlist] = user.get_playlists()
+        recently_played: list[Playlist] = user.get_recently_played()
+
+        for playlist in recently_played:
+            if playlist.get_uuid() == playlist_uuid:
+                recently_played.remove(playlist)
+                break
+        
         for playlist in playlists:
             if playlist.get_uuid() == playlist_uuid:
-                playlists.delete_playlist(playlist)
+                user.delete_playlist(playlist)
                 del playlist
                 return True
         return False
@@ -173,14 +180,15 @@ class MusicManager(Manager):
         if uuid in self.songs:
             # just in case
             # self.delete_song_file(uuid)
-            song = self.songs[uuid]
+            song: Song = self.songs[uuid]
             
-            for g in self.genres:
-                self.genres[g].delete_song(song)
-            for a in self.artists:
-                self.artists[a].delete_song(song)
-            for a in self.albums:
-                self.albums[a].delete_song(song)
+            for g in song.get_genres():
+                g.delete_song(song)
+            for a in song.get_artists():
+                a.delete_song(song)
+            a = song.get_album()
+            if a:
+                a.delete_song(song)
             
             del self.songs[uuid]
             return True

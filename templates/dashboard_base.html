@@ -13,7 +13,7 @@
 {% block main %}
 <div class="d-flex flex-row">
     {# sidebar #}
-    <div class="sidebar p-4 bg-light shadow d-flex flex-column" style="height: 100vh">
+    <div class="sidebar p-4 bg-light shadow d-flex flex-column" style="position: fixed; height: 100vh; overflow-y: auto; z-index: 1000;">
         <h3>Admin Dashboard</h3>
         <hr>
         <ul class="nav nav-pills flex-column flex-grow-1" style="width:280px">
@@ -24,7 +24,7 @@
     </div>
     
     {# content #}
-    <div class="content flex-grow-1">
+    <div class="content flex-grow-1" style="padding-left: 300px;">
         <div class="container p-5">
             <h2>{% block title %}Dashboard{% endblock %}</h2>
             <hr>
