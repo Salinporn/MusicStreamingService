@@ -53,7 +53,10 @@ class User(persistent.Persistent):
 
     def add_playlist(self, playlist: "Playlist"):
         self.playlists.append(playlist)
-        
+
+    def delete_playlist(self, playlist: "Playlist"):
+        self.playlists.remove(playlist)
+
     def add_recently_played(self, playlist: "Playlist"):
         if playlist in self.recently_played:
             self.recently_played.remove(playlist)
@@ -84,7 +87,7 @@ class Song(persistent.Persistent):
     def get_artists(self):
         return self.artists
     
-    def get_album(self):
+    def get_album(self) -> "Album":
         return self.album
     
     def get_listens(self):
@@ -256,7 +259,7 @@ class Playlist(persistent.Persistent):
         return {
             "uuid": self.uuid,
             "name": self.name,
-            "songs": [ song.uuid for song in self.songs ]
+            "songs": [ song.get_uuid() for song in self.songs ]
         }
         
     def set_name(self, name):
