@@ -230,10 +230,6 @@ class Album(persistent.Persistent):
     
     def add_song(self, song: Song):
         self.songs.append(song)
-        
-class Library(persistent.Persistent):
-    def __init__(self):
-        pass
 
 class Playlist(persistent.Persistent):
     def __init__(self, uuid, name, author):
