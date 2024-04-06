@@ -31,7 +31,7 @@ class Playlist:
         self.name: str = name
         self.author: str = author
         self.image: QPixmap = image
-        self.songs: list[str] = songs if songs else []
+        self.songs: list[str] = [song for song in songs if song] if songs else []
     
     def get_uuid(self):
         return self.uuid

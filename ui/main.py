@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QMainWindow, QApplication, QDialog,
     QHBoxLayout, QVBoxLayout, QGridLayout, QSizePolicy, QLayout,
-    QPushButton, QToolButton, QMenu, QLineEdit, QFileDialog,
+    QPushButton, QToolButton, QMenu, QLineEdit, QFileDialog, QSlider,
     QLabel, QMessageBox)
 from PySide6.QtGui import (QIcon, QCursor, QRegion, QMouseEvent, QPixmap, QImage, QAction)
 from PySide6.QtCore import (
@@ -403,10 +403,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             recently_played = recently_played[:6]
             
         for playlist in recently_played:
-            playlist_obj = self.playlists[playlist]
-            self.recent_contents.layout().addWidget(
-                SmallPlaylistItem(playlist_obj, self)
-            )
+            if playlist in self.playlists:
+                playlist_obj = self.playlists[playlist]
+                self.recent_contents.layout().addWidget(
+                    SmallPlaylistItem(playlist_obj, self)
+                )
             
         # recommended songs
         reply = self.perform_get_request_sync(self.SERVER_URL + self.RECOMMENDED_SONGS_ENDPOINT)
@@ -455,10 +456,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             recently_played = recently_played[:6]
         
         for playlist in recently_played:
-            playlist_obj = self.playlists[playlist]
-            self.recent_contents.layout().addWidget(
-                SmallPlaylistItem(playlist_obj, self)
-            )
+            if playlist in self.playlists:
+                playlist_obj = self.playlists[playlist]
+                self.recent_contents.layout().addWidget(
+                    SmallPlaylistItem(playlist_obj, self)
+                )
         
         # update recommended songs
         reply = self.perform_get_request_sync(self.SERVER_URL + self.RECOMMENDED_SONGS_ENDPOINT)
@@ -483,6 +485,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # authenticated successfully, now use session cookie to get info
         
         user_data = self.get_user_data()
+        
+        print(user_data)
         
         self.songs: dict[str, Song] = {}
         self.playlists: dict[str, Playlist] = {}
@@ -731,7 +735,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_library_page(self):
         for playlist in self.user.playlists:
-            self.add_playlist(self.playlists[playlist])
+            if playlist in self.playlists:
+                self.add_playlist(self.playlists[playlist])
 
     def add_new_playlist(self):
         reply = self.perform_post_request_sync(self.SERVER_URL + self.ADD_USER_PLAYLIST_ENDPOINT, None)
@@ -903,6 +908,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.player_slider.sliderPressed.connect(self.slider_pressed)
         self.player_slider.valueChanged.connect(self.slider_value_changed)
         self.player_slider.sliderReleased.connect(self.slider_released)
+        self.player_slider.mousePressEvent = self.click_slider.__get__(self.player_slider, QSlider)
 
         self.player_page_play_pause_button.clicked.connect(self.toggle_pause_play)
         self.player_page_previous_button.clicked.connect(self.previous_clicked)
@@ -930,6 +936,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.player_thumbnail.clicked.connect(self.open_player)
         
         self.clear_player()
+    
+    def click_slider(self, _):
+        pass
     
     def clear_player(self):
         self.is_playing = False
@@ -1148,6 +1157,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.is_slider_pressed = False
         
+        self.update_player()
+        
     def slider_value_changed(self, position):
         if self.is_slider_pressed:
             self.set_player_position(position)
@@ -1240,7 +1251,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         for song in playlist.get_songs():
             if song not in self.songs:
-                self.load_song(song)
+                ret = self.load_song(song)
+                if ret is None:
+                    continue
             self.add_playlist_item(self.songs[song])
 
     def open_playlist_page(self, playlist: Playlist):
@@ -1395,7 +1408,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def add_playlist_item(self, song: Song, is_album=False):
         if len(self.song_items) == 0:
             self.playlist_no_songs_label.hide()
-        
         item = SongItem(song, len(self.song_items), self.opened_playlist, is_album=is_album, parent=self)
         self.song_items.append(item)
         self.playlist_contents.layout().addWidget(item)
@@ -1593,18 +1605,18 @@ class AlbumItem(BigThumbnailItem):
         self.main_window = parent
         self.album = album
 
-        self.menu_button = QToolButton(self)
+        # self.menu_button = QToolButton(self)
         # self.menu_button.setText("...")
-        menu_icon = QIcon()
-        menu_icon.addFile(":/resources/assets/images/menu.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.menu_button.setIcon(menu_icon)
-        self.menu_button.setIconSize(QSize(16, 16))
+        # menu_icon = QIcon()
+        # menu_icon.addFile(":/resources/assets/images/menu.png", QSize(), QIcon.Normal, QIcon.Off)
+        # self.menu_button.setIcon(menu_icon)
+        # self.menu_button.setIconSize(QSize(16, 16))
         
-        self.menu_button.clicked.connect(self.show_menu)
-        self.menu_button.setStyleSheet("background-color: rgba(0,0,0,0)")
+        # self.menu_button.clicked.connect(self.show_menu)
+        # self.menu_button.setStyleSheet("background-color: rgba(0,0,0,0)")
         
-        geometry = self.geometry()
-        self.menu_button.setGeometry(geometry.right()-24, geometry.bottom()-24, 16, 16)
+        # geometry = self.geometry()
+        # self.menu_button.setGeometry(geometry.right()-24, geometry.bottom()-24, 16, 16)
     
         self.clicked.connect(self.on_click)
     
@@ -1613,20 +1625,20 @@ class AlbumItem(BigThumbnailItem):
         print("test")
         self.main_window.open_album(self.album)
 
-    def show_menu(self):
-        menu = QMenu(self)
-        menu.setStyleSheet("background-color: #1e1e1e")
+    # def show_menu(self):
+    #     menu = QMenu(self)
+    #     menu.setStyleSheet("background-color: #1e1e1e")
 
-        # TODO: add to library?
-        menu.setStyleSheet("background-color: #1e1e1e")
-        add_to_playlist_action = QAction("Add to Library", self)
-        add_to_playlist_action.triggered.connect(self.add_to_library)
-        menu.addAction(add_to_playlist_action)
+    #     # TODO: add to library?
+    #     menu.setStyleSheet("background-color: #1e1e1e")
+    #     add_to_playlist_action = QAction("Add to Library", self)
+    #     add_to_playlist_action.triggered.connect(self.add_to_library)
+    #     menu.addAction(add_to_playlist_action)
         
-        menu.exec_(self.menu_button.mapToGlobal(self.menu_button.rect().bottomRight()))
+    #     menu.exec_(self.menu_button.mapToGlobal(self.menu_button.rect().bottomRight()))
 
-    def add_to_library(self):
-        pass
+    # def add_to_library(self):
+    #     pass
 
 class BigSongItem(BigThumbnailItem):
     def __init__(self, song: Song, parent: MainWindow):
@@ -1681,11 +1693,12 @@ class BigSongItem(BigThumbnailItem):
         menu.setStyleSheet("background-color: #1e1e1e")
         if playlists:
             for playlist in playlists:
-                playlist_obj = self.main_window.playlists[playlist]
-                action = QAction(playlist_obj.get_name(), self)
-                action.setData(playlist_obj.get_uuid())
-                action.triggered.connect(self.add_to_playlist)
-                menu.addAction(action)
+                if playlist in self.main_window.playlists:
+                    playlist_obj = self.main_window.playlists[playlist]
+                    action = QAction(playlist_obj.get_name(), self)
+                    action.setData(playlist_obj.get_uuid())
+                    action.triggered.connect(self.add_to_playlist)
+                    menu.addAction(action)
         else:
             action = QAction("No playlists", self)
             action.setEnabled(False)
@@ -1830,7 +1843,7 @@ class LibraryItem(QWidget):
 
     def delete_playlist(self):
         self.main_window.perform_post_request_sync(self.main_window.SERVER_URL + self.main_window.DELETE_PLAYLIST_ENDPOINT + self.playlist.get_uuid())
-        self.playlist.remove_song(self.song.get_uuid())
+        self.main_window.playlists.pop(self.playlist.get_uuid())
         self.main_window.update_library_page()
 
 # -- profile page --
