@@ -1,10 +1,26 @@
 # MusicStreamingService
-🎵 Music Streaming Service 🎶
-Welcome to the Music Streaming Service project! This is a group project developed during the 3rd year, Semester 1 of the Software Engineering Principles course at KMITL. Our aim was to create a robust and user-friendly platform for streaming music.
 
-🌟 Features
-User Authentication: Sign up, log in, and manage your account securely. 🔒
-Music Library: Browse and search for songs, albums, and artists. 🎵
-Playlist Creation: Create, edit, and manage your own playlists. 🎼
-Recommendations: Get personalized music recommendations based on your listening history. 🔍
-High-Quality Streaming: Enjoy music in high-definition audio quality. 🎧
+🎶 About Music Streaming Service<br>
+Music Streaming Service is a collaborative group project undertaken during the 3rd year, Semester 1, in the Software Engineering Principles course at KMITL.
+
+📚 Key Features<be>
+
+For Users:
+- Music Library: Explore a diverse music collection with a user-friendly interface.
+- Playlists: Create and manage custom playlists tailored to your preferences.
+- Search Functionality: Find your favorite tracks, albums, and artists quickly.
+- Play Controls: Enjoy a responsive and intuitive player with controls for play, pause, skip, and volume.
+- User Profiles: Personalize your listening experience and manage your account settings.<be>
+
+For Administrators:
+- Music Management: Add, update, and remove tracks, albums, and genres with ease.
+- User Management: Manage user accounts and permissions efficiently.
+  
+🚀 Technologies Used
+- HTML: For structuring the web interface.  
+- Bootstrap: For responsive and modern web design.  
+- PySide6: For creating the desktop application interface.  
+- QTCreator: For designing and developing the GUI.  
+- Python: For the backend logic and application development.  
+- FastAPI: For building the backend API that handles streaming and data management.  
+- ZODB: For persistent object storage, managing data efficiently.
