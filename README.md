@@ -24,3 +24,8 @@ For Administrators:
 - Python: For the backend logic and application development.  
 - FastAPI: For building the backend API that handles streaming and data management.  
 - ZODB: For persistent object storage, managing data efficiently.
+
+👥 Contributors
+1. Sirapob Sriviriyahphaiboon
+2. Salinporn Rattanaprapaporn
+3. Phyo Thi Khaing
