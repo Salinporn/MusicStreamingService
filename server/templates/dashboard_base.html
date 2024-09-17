@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{# macro for highlighting the active link #}
+{# https://stackoverflow.com/questions/21991820/style-active-navigation-element-with-a-flask-jinja2-macro #}
+{% macro nav_link(endpoint, name) %}
+    {% if request.endpoint.__name__ == endpoint %}
+        <li class="nav-item"><a class="nav-link active" href="{{ url_for(endpoint) }}">{{name}}</a></li>
+    {% else %}
+        <li class="nav-item"><a class="nav-link" href="{{ url_for(endpoint) }}">{{name}}</a></li>
+    {% endif %}
+{% endmacro %}
+
+{% block main %}
+<div class="d-flex flex-row">
+    {# sidebar #}
+    <div class="sidebar p-4 bg-light shadow d-flex flex-column" style="position: fixed; height: 100vh; overflow-y: auto; z-index: 1000;">
+        <h3>Admin Dashboard</h3>
+        <hr>
+        <ul class="nav nav-pills flex-column flex-grow-1" style="width:280px">
+            {{ nav_link("dashboard_users", "Manage Users") }}
+            {{ nav_link("dashboard_music", "Manage Music") }}
+            <li class="nav-item mt-auto"><a class="nav-link" href="/logout">Log out</a></li>
+        </ul>
+    </div>
+    
+    {# content #}
+    <div class="content flex-grow-1" style="padding-left: 300px;">
+        <div class="container p-5">
+            <h2>{% block title %}Dashboard{% endblock %}</h2>
+            <hr>
+            <div class="sections">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

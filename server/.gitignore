@@ -1,0 +1,7 @@
+__pycache__
+start.sh
+.env
+instances/*
+uploads/*/*
+index/*
+config.xml
