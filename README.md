@@ -1,7 +1,7 @@
 # MusicStreamingService
 
 🎶 About Music Streaming Service<br>
-Music Streaming Service is a collaborative group project undertaken during the 3rd year, Semester 1, in the Software Engineering Principles course at KMITL.
+Music Streaming Service is a collaborative group project undertaken during the 2nd year, Semester 2, in the Software Engineering Principles course at KMITL.
 
 📚 Key Features<be>
 
